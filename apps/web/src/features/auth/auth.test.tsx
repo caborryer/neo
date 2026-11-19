@@ -143,7 +143,7 @@ describe('ResetPasswordPage (HU-02)', () => {
     await userEvent.type(await screen.findByLabelText('Nueva contraseña'), 'corta');
     await userEvent.type(screen.getByLabelText('Confirmar contraseña'), 'otra');
     await userEvent.click(screen.getByRole('button', { name: 'Guardar contraseña' }));
-    expect(await screen.findByText('Mínimo 8 caracteres')).toBeInTheDocument();
+    expect(await screen.findByText('Mínimo 10 caracteres')).toBeInTheDocument();
   });
 
   it('invitación: guarda la contraseña y confirma que la cuenta quedó activa', async () => {

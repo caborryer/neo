@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createChallengeSchema, createContentSchema, updateChallengeSchema, updateContentSchema } from './index';
+import { createChallengeSchema, createContentSchema, passwordSchema, updateChallengeSchema, updateContentSchema } from './index';
 
 const UUID = '11111111-1111-4111-8111-111111111111';
 
@@ -43,5 +43,16 @@ describe('retos (HU-29)', () => {
   it('al editar no acepta campos desconocidos', () => {
     expect(updateChallengeSchema.safeParse({ createdById: UUID }).success).toBe(false);
     expect(updateChallengeSchema.safeParse({ goal: 10 }).success).toBe(true);
+  });
+});
+
+describe('passwordSchema (política de contraseñas)', () => {
+  it('exige 10 caracteres y rechaza contraseñas triviales', () => {
+    expect(passwordSchema.safeParse('Corta1!').success).toBe(false);
+    expect(passwordSchema.safeParse('123456789').success).toBe(false);
+    expect(passwordSchema.safeParse('1234567890').success).toBe(false);
+    expect(passwordSchema.safeParse('aaaaaaaaaaaa').success).toBe(false);
+    expect(passwordSchema.safeParse('Password123').success).toBe(false);
+    expect(passwordSchema.safeParse('Clave-larga-y-unica-2026').success).toBe(true);
   });
 });

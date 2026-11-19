@@ -5,6 +5,7 @@ import type { MediaAssetDto } from '@neo/shared-types';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
 import { PrismaService } from '../database/prisma.service';
 import { detectImageMime, extensionFor } from './image-type';
+import { InvalidImageError, sanitizeImage } from './image-sanitizer';
 import { StorageService } from './storage.service';
 
 export interface UploadedImage {
@@ -40,7 +41,16 @@ export class MediaService {
     const mime = detectImageMime(file.buffer);
     if (!mime) throw new BadRequestException('Formato no permitido. Usa JPG, PNG o WebP');
 
-    const storageKey = await this.storage.save(file.buffer, extensionFor(mime));
+    // Se guarda la versión re-codificada (sin EXIF/GPS, con dimensiones acotadas), nunca los bytes originales.
+    let clean: Buffer;
+    try {
+      clean = await sanitizeImage(file.buffer, mime);
+    } catch (err) {
+      if (err instanceof InvalidImageError) throw new BadRequestException(err.message);
+      throw err;
+    }
+
+    const storageKey = await this.storage.save(clean, extensionFor(mime));
     try {
       const asset = await this.prisma.mediaAsset.create({
         data: {
@@ -48,7 +58,7 @@ export class MediaService {
           fileName: file.originalname.replace(/[^\w.\- ]+/g, '_').slice(0, 120) || 'imagen',
           mimeType: mime,
           storageKey,
-          sizeBytes: file.size,
+          sizeBytes: clean.length,
         },
       });
       return { id: asset.id, url: mediaUrl(asset.id), mimeType: asset.mimeType, sizeBytes: asset.sizeBytes };

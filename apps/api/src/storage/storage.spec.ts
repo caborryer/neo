@@ -1,7 +1,11 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { detectImageMime } from './image-type';
+import { InvalidImageError, sanitizeImage } from './image-sanitizer';
 import { MediaService } from './media.service';
 import { StorageService } from './storage.service';
+
+// El re-codificado real se prueba en image-sanitizer.spec.ts; aquí se simula para usar bytes mínimos.
+jest.mock('./image-sanitizer', () => ({ ...jest.requireActual('./image-sanitizer'), sanitizeImage: jest.fn(async (b: Buffer) => b) }));
 
 const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(20)]);
 const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(20)]);
@@ -59,6 +63,12 @@ describe('MediaService', () => {
     await expect(service.uploadImage(owner, undefined)).rejects.toBeInstanceOf(BadRequestException);
     await expect(service.uploadImage(owner, file(JPEG, { size: 2 * 1024 * 1024 }))).rejects.toThrow('máximo');
     await expect(service.uploadImage(owner, file(Buffer.from('<html>')))).rejects.toThrow('Formato no permitido');
+    expect(storage.save).not.toHaveBeenCalled();
+  });
+  it('una imagen corrupta o ilegible se rechaza con 400 sin guardar nada', async () => {
+    const { service, storage } = setup();
+    (sanitizeImage as jest.Mock).mockRejectedValueOnce(new InvalidImageError('La imagen está dañada o no se puede procesar'));
+    await expect(service.uploadImage(owner, file(JPEG))).rejects.toThrow('dañada');
     expect(storage.save).not.toHaveBeenCalled();
   });
   it('si falla el registro en BD borra el archivo guardado', async () => {

@@ -78,7 +78,7 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AuthLayout title={title} subtitle="Elige una contraseña de al menos 8 caracteres.">
+    <AuthLayout title={title} subtitle="Elige una contraseña de al menos 10 caracteres.">
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         {formError && (
           <p role="alert" className="rounded-neo-input bg-red-50 px-3 py-2 text-sm text-red-900">

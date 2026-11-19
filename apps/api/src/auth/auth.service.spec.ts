@@ -58,6 +58,17 @@ describe('AuthService.login (HU-01)', () => {
     await expect(service.login('nadie@mail.com', 'Secreta123', {})).rejects.toThrow(new UnauthorizedException('Credenciales inválidas'));
   });
 
+  it('tras 10 fallos la cuenta se bloquea (429), incluso con la contraseña correcta, y un correo inexistente cuenta igual', async () => {
+    const { service, prisma } = setup();
+    prisma.user.findUnique.mockResolvedValue(await baseUser());
+    for (let i = 0; i < 10; i++) await expect(service.login('ana@mail.com', 'mala-clave', {})).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(service.login('ana@mail.com', 'Secreta123', {})).rejects.toMatchObject({ status: 429 });
+
+    prisma.user.findUnique.mockResolvedValue(null);
+    for (let i = 0; i < 10; i++) await expect(service.login('nadie@mail.com', 'x', {})).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(service.login('nadie@mail.com', 'x', {})).rejects.toMatchObject({ status: 429 });
+  });
+
   it.each(['PENDING', 'SUSPENDED', 'INACTIVE'])('estado %s con contraseña correcta → 403', async (status) => {
     const { service, prisma } = setup();
     prisma.user.findUnique.mockResolvedValue(await baseUser({ status }));

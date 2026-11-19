@@ -23,15 +23,22 @@ export const emailSchema = z
   .toLowerCase()
   .email('Correo inválido');
 
-/** Suposición (HU-02): mínimo 8 caracteres. */
+/** Contraseñas triviales que se rechazan aunque cumplan el largo (listas de filtraciones: siempre las primeras en probarse). */
+const COMMON_PASSWORDS = new Set([
+  '1234567890', '12345678910', '0123456789', 'qwertyuiop', 'password12', 'password123', 'password1234', 'contrasena1', 'contrasena12', 'contrasena123',
+  'abcdefghij', 'abc1234567', '1q2w3e4r5t', 'iloveyou12', 'passw0rd12', 'colombia123', 'bogota1234', 'neotraining', 'neotraining1', 'neotraining123',
+]);
+
+/** Mínimo 10 caracteres (NIST/OWASP priorizan el largo sobre las reglas de composición) y sin contraseñas triviales. */
 export const passwordSchema = z
   .string({ error: 'La contraseña es obligatoria' })
-  .min(8, 'Mínimo 8 caracteres')
-  .max(128, 'Máximo 128 caracteres');
+  .min(10, 'Mínimo 10 caracteres')
+  .max(128, 'Máximo 128 caracteres')
+  .refine((v) => !COMMON_PASSWORDS.has(v.toLowerCase()) && !/^(.)\1+$/.test(v), 'Esa contraseña es demasiado común; elige otra');
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, 'La contraseña es obligatoria'),
+  password: z.string().min(1, 'La contraseña es obligatoria').max(128, 'Máximo 128 caracteres'),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
@@ -441,7 +448,7 @@ export type ListNotificationsQuery = z.output<typeof listNotificationsQuerySchem
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, 'Escribe tu contraseña actual'),
+    currentPassword: z.string().min(1, 'Escribe tu contraseña actual').max(128, 'Máximo 128 caracteres'),
     newPassword: passwordSchema,
     confirmPassword: z.string(),
   })

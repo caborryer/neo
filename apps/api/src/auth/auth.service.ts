@@ -6,6 +6,7 @@ import * as argon2 from 'argon2';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../database/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { LoginAttemptLimiter } from './login-attempt-limiter';
 import { hasActiveAccess } from './access.util';
 import { UNAVAILABLE_ACCESS_MESSAGE } from './auth.constants';
 import { PasswordTokenService } from './password-token.service';
@@ -39,13 +40,20 @@ export class AuthService {
     private readonly mail: MailService,
     private readonly audit: AuditService,
     private readonly passwordTokens: PasswordTokenService,
+    private readonly loginLimiter: LoginAttemptLimiter = new LoginAttemptLimiter(),
   ) {}
 
   async login(email: string, password: string, client: ClientInfo): Promise<{ user: User; tokens: SessionTokens }> {
-    const user = await this.prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+    const key = email.trim().toLowerCase();
+    this.loginLimiter.assertAllowed(key);
+    const user = await this.prisma.user.findUnique({ where: { email: key } });
     const hash = user?.passwordHash ?? (await this.getDummyHash());
     const valid = await argon2.verify(hash, password).catch(() => false);
-    if (!user || !valid) throw new UnauthorizedException(INVALID_CREDENTIALS);
+    if (!user || !valid) {
+      this.loginLimiter.recordFailure(key);
+      throw new UnauthorizedException(INVALID_CREDENTIALS);
+    }
+    this.loginLimiter.recordSuccess(key);
 
     // Solo tras validar la contraseña se revela que el acceso no está disponible (HU-01).
     if (!hasActiveAccess(user)) throw new ForbiddenException(UNAVAILABLE_ACCESS_MESSAGE);
@@ -196,6 +204,7 @@ export class AuthService {
       { sub: user.id, role: user.role },
       {
         secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
+        algorithm: 'HS256',
         expiresIn: Math.floor(accessMaxAgeMs / 1000),
       },
     );

@@ -3,6 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { createTransport, Transporter } from 'nodemailer';
 import { invitationEmail, resetPasswordEmail } from './templates';
 
+/** a***@dominio.com: los logs no deben guardar correos completos (datos personales). */
+export const maskEmail = (email: string): string => email.replace(/^(.).*(@.*)$/, '$1***$2');
+
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
@@ -38,7 +41,7 @@ export class MailService {
       return true;
     } catch (err) {
       // Nunca se registra el contenido (contiene el enlace con el token).
-      this.logger.error(`No se pudo enviar el correo a ${to}: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.error(`No se pudo enviar el correo a ${maskEmail(to)}: ${err instanceof Error ? err.message : String(err)}`);
       return false;
     }
   }

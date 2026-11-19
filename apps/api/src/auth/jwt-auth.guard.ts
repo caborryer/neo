@@ -35,6 +35,7 @@ export class JwtAuthGuard implements CanActivate {
     try {
       payload = await this.jwt.verifyAsync<{ sub?: string }>(token, {
         secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
+        algorithms: ['HS256'], // nunca aceptar otro algoritmo (alg:none / confusión de algoritmos)
       });
     } catch {
       throw new UnauthorizedException('Sesión expirada');

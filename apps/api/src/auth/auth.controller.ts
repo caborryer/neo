@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, Logger, Post, Req, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import type { CookieOptions, Request, Response } from 'express';
@@ -21,6 +21,8 @@ import { AuthService, SessionTokens } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly auth: AuthService,
     private readonly config: ConfigService,
@@ -69,7 +71,9 @@ export class AuthController {
   @HttpCode(200)
   @Post('forgot-password')
   async forgotPassword(@Body(new ZodValidationPipe(forgotPasswordSchema)) body: ForgotPasswordInput) {
-    await this.auth.forgotPassword(body.email);
+    // El trabajo (buscar, crear token, enviar correo) corre en segundo plano: si se esperara, la respuesta tardaría
+    // más cuando el correo existe y eso permitiría descubrir qué correos están registrados (enumeración por tiempo).
+    void this.auth.forgotPassword(body.email).catch((err: unknown) => this.logger.error(`forgot-password falló: ${err instanceof Error ? err.message : String(err)}`));
     // Siempre la misma respuesta (HU-02): no revela si el correo existe.
     return { message: 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.' };
   }
