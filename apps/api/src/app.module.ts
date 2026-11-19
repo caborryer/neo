@@ -17,6 +17,8 @@ import { StorageModule } from './storage/storage.module';
 import { NutritionModule } from './nutrition/nutrition.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { StatisticsModule } from './statistics/statistics.module';
+import { ContentModule } from './content/content.module';
+import { ChallengesModule } from './challenges/challenges.module';
 import { FoodSchedulesModule } from './food-schedules/food-schedules.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { CsrfGuard } from './common/guards/csrf.guard';
@@ -50,6 +52,8 @@ import { TransformResponseInterceptor } from './common/interceptors/transform-re
     NotificationsModule,
     StatisticsModule,
     FoodSchedulesModule,
+    ContentModule,
+    ChallengesModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

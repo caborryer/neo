@@ -128,6 +128,7 @@ enum NotificationType {
   FEEDBACK_RECEIVED
   MEAL_LOG_PENDING_REVIEW
   MEAL_LOG_REVIEWED
+  CHALLENGE_COMPLETED
 }
 
 enum PasswordTokenPurpose {
@@ -515,6 +516,10 @@ model Content {
   id               String          @id @default(uuid())
   title            String
   description      String?
+  // Texto del artículo (type ARTICLE).
+  body             String?         @db.Text
+  // ID de YouTube (type VIDEO).
+  videoId          String?
   category         ContentCategory
   type             ContentType
   thumbnailAssetId String?

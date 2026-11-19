@@ -11,10 +11,10 @@ function layout(title: string, body: string, ctaLabel: string, link: string): st
   return `<!doctype html><html lang="es"><body style="margin:0;background:#f5f5f7;font-family:Inter,Arial,sans-serif;color:#1d1d1f">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;padding:32px;max-width:480px">
-<tr><td><div style="font-size:22px;font-weight:700;letter-spacing:-.02em">Neo</div>
+<tr><td><div style="font-size:22px;font-weight:700;letter-spacing:.02em;color:#5C2946">neoTRAINING</div>
 <h1 style="font-size:20px;margin:24px 0 8px">${escapeHtml(title)}</h1>
 <p style="font-size:15px;line-height:1.5;margin:0 0 24px">${body}</p>
-<a href="${escapeHtml(link)}" style="display:inline-block;background:#1d1d1f;color:#fff;text-decoration:none;padding:12px 20px;border-radius:12px;font-weight:600">${escapeHtml(ctaLabel)}</a>
+<a href="${escapeHtml(link)}" style="display:inline-block;background:#5C2946;color:#fff;text-decoration:none;padding:12px 20px;border-radius:12px;font-weight:600">${escapeHtml(ctaLabel)}</a>
 <p style="font-size:13px;color:#6e6e73;margin:24px 0 0">Si el botón no funciona, copia este enlace en tu navegador:<br>${escapeHtml(link)}</p>
 <p style="font-size:13px;color:#6e6e73;margin:16px 0 0">El enlace es válido por 24 horas.</p>
 </td></tr></table></td></tr></table></body></html>`;

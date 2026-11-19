@@ -33,7 +33,7 @@ describe('StorageService', () => {
 describe('MediaService', () => {
   const owner: any = { id: 'u1', role: 'USER', privacyConsentAt: new Date() };
   function setup() {
-    const prisma: any = { mediaAsset: { create: jest.fn().mockImplementation(async ({ data }: any) => ({ id: 'a1', ...data })), findUnique: jest.fn() } };
+    const prisma: any = { mediaAsset: { create: jest.fn().mockImplementation(async ({ data }: any) => ({ id: 'a1', ...data })), findUnique: jest.fn() }, content: { findFirst: jest.fn().mockResolvedValue(null) } };
     const storage: any = { save: jest.fn().mockResolvedValue('k.jpg'), remove: jest.fn(), open: jest.fn().mockReturnValue(require('node:stream').Readable.from([])) };
     const service = new MediaService(prisma, storage, { get: () => 1 } as any); // máximo 1 MB
     return { service, prisma, storage };
@@ -74,5 +74,14 @@ describe('MediaService', () => {
     await expect(service.open({ id: 'c1', role: 'COACH' } as any, 'a1')).resolves.toMatchObject({ mimeType: 'image/jpeg' });
     prisma.mediaAsset.findUnique.mockResolvedValue(null);
     await expect(service.open(owner, 'zz')).rejects.toBeInstanceOf(NotFoundException);
+  });
+  it('la miniatura de un contenido publicado la ve cualquier usuaria, la de un borrador no', async () => {
+    const { service, prisma } = setup();
+    prisma.mediaAsset.findUnique.mockResolvedValue({ id: 'a1', ownerId: 'coach', storageKey: 'k.jpg', mimeType: 'image/jpeg' });
+    prisma.content.findFirst.mockResolvedValue({ id: 'c1' });
+    await expect(service.open(owner, 'a1')).resolves.toMatchObject({ mimeType: 'image/jpeg' });
+    expect(prisma.content.findFirst.mock.calls[0][0].where).toEqual({ thumbnailAssetId: 'a1', published: true });
+    prisma.content.findFirst.mockResolvedValue(null);
+    await expect(service.open(owner, 'a1')).rejects.toBeInstanceOf(NotFoundException);
   });
 });

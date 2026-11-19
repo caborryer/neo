@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
+import { ChallengesModule } from '../challenges/challenges.module';
 import { SessionsController } from './sessions.controller';
 import { SessionsService } from './sessions.service';
 
-@Module({ controllers: [SessionsController], providers: [SessionsService], exports: [SessionsService] })
+@Module({ imports: [ChallengesModule], controllers: [SessionsController], providers: [SessionsService], exports: [SessionsService] })
 export class SessionsModule {}

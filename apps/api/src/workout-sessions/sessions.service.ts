@@ -3,6 +3,7 @@ import { FeedbackCompletion, NotificationType, Prisma, UserRole, WorkoutAssignme
 import type { ApiList, FeedbackDto, SessionDto, SessionHistoryItem } from '@neo/shared-types';
 import type { CreateFeedbackInput, CreateSessionInput, ListSessionsQuery } from '@neo/validation';
 import { AuditService } from '../audit/audit.service';
+import { ChallengesService } from '../challenges/challenges.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { formatDateOnly, todayIn } from '../common/dates';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
@@ -17,6 +18,7 @@ export class SessionsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly notifications: NotificationsService,
+    private readonly challenges: ChallengesService,
   ) {}
 
   /**
@@ -50,7 +52,7 @@ export class SessionsService {
           data: { status: WorkoutAssignmentStatus.COMPLETED },
         });
         if (claimed.count === 0) throw new ConflictException('Este entrenamiento ya fue registrado');
-        return tx.workoutSession.create({
+        const created = await tx.workoutSession.create({
           data: {
             assignmentId: assignment.id,
             startedAt,
@@ -62,6 +64,9 @@ export class SessionsService {
           },
           include: { feedback: { select: { id: true } } },
         });
+        // §4.6: el progreso de los retos lo calcula el servidor, en la misma transacción.
+        await this.challenges.syncSession(tx, created.id);
+        return created;
       });
       return { session: toSessionDto(session), created: true };
     } catch (err) {
@@ -143,6 +148,7 @@ export class SessionsService {
           data: { status: outcome.status, completionPercentage: outcome.percentage },
         });
         await tx.workoutAssignment.update({ where: { id: session.assignmentId }, data: { status: outcome.status } });
+        await this.challenges.syncSession(tx, sessionId);
         await this.audit.record({ actorId: user.id, action: 'WORKOUT_FEEDBACK_SUBMITTED', resource: 'WorkoutSession', resourceId: sessionId }, tx);
         await this.notifications.notifyCoachOf(
           user.id,

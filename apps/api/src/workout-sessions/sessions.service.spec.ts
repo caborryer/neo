@@ -20,7 +20,8 @@ function setup() {
   };
   const audit: any = { record: jest.fn() };
   const notifications: any = { notify: jest.fn(), notifyCoachOf: jest.fn() };
-  return { service: new SessionsService(prisma, audit, notifications), prisma, tx, audit, notifications };
+  const challenges: any = { syncSession: jest.fn() };
+  return { service: new SessionsService(prisma, audit, notifications, challenges), prisma, tx, audit, notifications, challenges };
 }
 
 describe('SessionsService.create (HU-19, idempotencia)', () => {
@@ -159,5 +160,27 @@ describe('SessionsService · notificaciones (HU-25)', () => {
     prisma.workoutSession.findFirst.mockResolvedValue({ id: 's1', assignmentId: 'a1', feedback: { id: 'f' } });
     await expect(service.createFeedback(user, 's1', { feelingRating: 4, ateBeforeWorkout: false, completed: 'YES' } as any)).rejects.toThrow('Ya enviaste');
     expect(notifications.notifyCoachOf).not.toHaveBeenCalled();
+  });
+});
+
+describe('SessionsService · retos (§4.6)', () => {
+  it('al completar la sesión recalcula los retos dentro de la misma transacción', async () => {
+    const { service, tx, challenges } = setup();
+    await service.create(user, { assignmentId: 'a1', idempotencyKey: KEY });
+    expect(challenges.syncSession).toHaveBeenCalledWith(tx, 's1');
+  });
+
+  it('un reintento idempotente no vuelve a contar', async () => {
+    const { service, prisma, challenges } = setup();
+    prisma.workoutSession.findFirst.mockResolvedValue(sessionRow());
+    await service.create(user, { assignmentId: 'a1', idempotencyKey: KEY });
+    expect(challenges.syncSession).not.toHaveBeenCalled();
+  });
+
+  it('la retroalimentación también recalcula (un Parcial o No deja de contar)', async () => {
+    const { service, prisma, tx, challenges } = setup();
+    prisma.workoutSession.findFirst.mockResolvedValue(sessionRow({ assignmentId: 'a1' }));
+    await service.createFeedback(user, 's1', { completed: 'NO', feelingRating: 3, ateBeforeWorkout: false } as any);
+    expect(challenges.syncSession).toHaveBeenCalledWith(tx, 's1');
   });
 });

@@ -64,7 +64,12 @@ export class MediaService {
    */
   async open(user: AuthenticatedUser, id: string): Promise<{ file: StreamableFile; mimeType: string }> {
     const asset = await this.prisma.mediaAsset.findUnique({ where: { id } });
-    if (!asset || (user.role !== UserRole.COACH && asset.ownerId !== user.id)) throw new NotFoundException('Archivo no encontrado');
+    if (!asset) throw new NotFoundException('Archivo no encontrado');
+    if (user.role !== UserRole.COACH && asset.ownerId !== user.id) {
+      // Excepción: la miniatura de un contenido publicado es visible para todas las usuarias (HU-33).
+      const published = await this.prisma.content.findFirst({ where: { thumbnailAssetId: id, published: true }, select: { id: true } });
+      if (!published) throw new NotFoundException('Archivo no encontrado');
+    }
     return { file: new StreamableFile(this.storage.open(asset.storageKey)), mimeType: asset.mimeType };
   }
 }
