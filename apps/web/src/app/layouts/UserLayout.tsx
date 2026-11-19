@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { NavLink } from 'react-router-dom';
 import { BottomNavigation, userNavItems } from '@/components/layout/BottomNavigation';
 import { userRoutes } from '@/app/routes';
@@ -13,7 +14,7 @@ export function UserLayout() {
     <div className="min-h-dvh bg-neo-background pb-20 md:pb-0">
       <header className="sticky top-0 z-10 border-b border-neo-border bg-neo-surface">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 md:px-8">
-          <span className="text-lg font-bold text-neo-primary-dark">Neo</span>
+          <BrandLogo className="h-9" />
           <nav aria-label="Navegación de escritorio" className="hidden items-center gap-1 md:flex">
             {userNavItems
               .filter((i) => !i.disabled)

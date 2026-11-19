@@ -28,6 +28,9 @@ export function targetOf(n: NotificationDto, isCoach: boolean): string | null {
       return userRoutes.nutritionDiary;
     case 'MEAL_LOG_PENDING_REVIEW':
       return isCoach ? coachRoutes.foodReviews : null;
+    case 'CHALLENGE_PUBLISHED':
+    case 'CHALLENGE_COMPLETED':
+      return !isCoach && typeof d.challengeId === 'string' ? userRoutes.challenge(d.challengeId) : userRoutes.challenges;
     case 'FEEDBACK_RECEIVED':
       return isCoach ? coachRoutes.dashboard : null;
     default:

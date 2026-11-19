@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { Outlet } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -13,7 +14,7 @@ export function CoachLayout() {
   return (
     <div className="min-h-dvh bg-neo-background lg:flex">
       <aside className="sticky top-0 hidden h-dvh border-r border-neo-border bg-neo-surface md:block md:w-16 lg:w-64">
-        <div className="px-4 py-4 text-lg font-bold text-neo-primary-dark md:hidden lg:block">Neo</div>
+        <div className="px-4 py-4 md:hidden lg:block"><BrandLogo className="h-12" /></div>
         <div className="md:hidden lg:block"><Sidebar /></div>
         <div className="hidden md:block lg:hidden"><Sidebar collapsed /></div>
         <div className="p-3 md:hidden lg:block"><LogoutButton className="w-full" /></div>
@@ -31,7 +32,7 @@ export function CoachLayout() {
           >
             <Menu className="size-5" aria-hidden="true" />
           </button>
-          <span className="text-lg font-bold text-neo-primary-dark">Neo</span>
+          <BrandLogo className="h-9" />
           <div className="ml-auto"><NotificationBell to={coachRoutes.notifications} /></div>
         </header>
 
@@ -40,7 +41,7 @@ export function CoachLayout() {
             <button type="button" aria-label="Cerrar menú" className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
             <div className="absolute inset-y-0 left-0 w-72 bg-neo-surface shadow-neo-card">
               <div className="flex items-center justify-between px-4 py-3">
-                <span className="text-lg font-bold text-neo-primary-dark">Neo</span>
+                <BrandLogo className="h-9" />
                 <button type="button" aria-label="Cerrar menú" onClick={() => setDrawerOpen(false)} className="rounded-neo-button p-2 hover:bg-neo-neutral">
                   <X className="size-5" aria-hidden="true" />
                 </button>

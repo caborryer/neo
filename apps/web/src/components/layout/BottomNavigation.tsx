@@ -16,7 +16,7 @@ export const userNavItems: Item[] = [
   { to: userRoutes.dashboard, label: 'Inicio', icon: House },
   { to: userRoutes.workouts, label: 'Entrenamientos', icon: Dumbbell },
   { to: userRoutes.nutrition, label: 'Nutrición', icon: Utensils },
-  { to: userRoutes.challenges, label: 'Retos', icon: Trophy, disabled: true },
+  { to: userRoutes.challenges, label: 'Retos', icon: Trophy },
   { to: userRoutes.profile, label: 'Perfil', icon: UserRound },
 ];
 

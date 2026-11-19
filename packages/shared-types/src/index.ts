@@ -4,3 +4,4 @@ export * from './user';
 export * from './workout';
 export * from './nutrition';
 export * from './stats';
+export * from './content';

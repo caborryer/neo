@@ -25,6 +25,8 @@ test.describe.serial('Recorrido invitación → acceso', () => {
     await page.getByLabel('Nueva contraseña', { exact: true }).fill(password);
     await page.getByLabel('Confirmar contraseña').fill(password);
     await page.getByRole('button', { name: 'Guardar contraseña' }).click();
+    await expect(page.getByRole('status')).toContainText('cuenta está activa');
+    await page.getByRole('link', { name: 'Ir a iniciar sesión' }).click();
     await expect(page).toHaveURL(/\/login/);
   });
 
@@ -45,6 +47,6 @@ test.describe.serial('Recorrido invitación → acceso', () => {
 
     await uiLogin(page, email, password);
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByText('Correo o contraseña incorrectos')).toBeVisible();
+    await expect(page.getByText('Tu acceso no está disponible')).toBeVisible();
   });
 });

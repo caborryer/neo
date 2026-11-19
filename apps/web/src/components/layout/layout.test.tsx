@@ -4,7 +4,7 @@ import { BottomNavigation } from './BottomNavigation';
 import { Sidebar } from './Sidebar';
 
 describe('navegación', () => {
-  it('la usuaria ve las 5 secciones y Retos aparece deshabilitado', () => {
+  it('la usuaria ve las 5 secciones y Retos es un enlace', () => {
     render(
       <MemoryRouter>
         <BottomNavigation />
@@ -13,7 +13,7 @@ describe('navegación', () => {
     for (const label of ['Inicio', 'Entrenamientos', 'Nutrición', 'Retos', 'Perfil']) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
-    expect(screen.getByText('Retos').closest('[aria-disabled="true"]')).not.toBeNull();
+    expect(screen.getByRole('link', { name: /Retos/ })).toHaveAttribute('href', '/app/challenges');
     expect(screen.getByRole('link', { name: /Inicio/ })).toHaveAttribute('href', '/app/dashboard');
   });
 
@@ -25,6 +25,8 @@ describe('navegación', () => {
     );
     expect(screen.getByRole('link', { name: /Usuarias/ })).toHaveAttribute('href', '/coach/users');
     expect(screen.getByRole('link', { name: /Planes nutricionales/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Contenido/ })).toHaveAttribute('href', '/coach/content');
+    expect(screen.getByRole('link', { name: /Retos/ })).toHaveAttribute('href', '/coach/challenges');
     expect(screen.queryByRole('link', { name: /Estadísticas/ })).toBeNull();
   });
 });

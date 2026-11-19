@@ -86,4 +86,10 @@ Fases 0 a 4 completas (base, autenticación, contenido, nutrición, dashboards y
 - Despliegue con Docker Compose + Caddy, backups y restauración: ver [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
 - CI en GitHub Actions (`.github/workflows/ci.yml`) y suite E2E con Playwright (`npm run test:e2e`).
 - Checklist de QA manual: [`docs/QA.md`](docs/QA.md).
-# neo
+- Identidad visual (colores, logo, tipografía): [`docs/MARCA.md`](docs/MARCA.md).
+
+Fase 6 (contenido y retos):
+
+- **Contenido (HU-33)**: la Coach crea artículos y videos de YouTube (reproductor sin cookies), con borrador/publicado; las usuarias solo ven lo publicado.
+- **Retos (HU-29/30)**: la Coach crea retos con meta de sesiones y fechas; las usuarias se inscriben y el progreso lo calcula únicamente el servidor a partir de sus sesiones completadas.
+- Requiere migración: desde `apps/api`, `npm run prisma:migrate -- --name fase6` (y commitear `apps/api/prisma/migrations`).

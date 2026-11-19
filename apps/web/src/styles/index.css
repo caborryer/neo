@@ -1,24 +1,26 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
 
-/* Sistema de diseño de Neo. Fuente: docs/ESPECIFICACION.md §3.2–§3.5 */
+/* Sistema de diseño de Neo. Identidad: Manual de imagen neoTRAINING (docs/MARCA.md). Estructura: docs/ESPECIFICACION.md §3.2–§3.5 */
 @theme {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Geogrotesque es la tipografía de marca (licencia comercial): si está instalada o se agrega @font-face se usa; si no, Inter. */
+  --font-sans: "Geogrotesque", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
 
-  --color-neo-primary: #E4798D;
-  --color-neo-primary-dark: #D95770;
+  --color-neo-primary: #5C2946; /* vino · Pantone 5115 C */
+  --color-neo-primary-dark: #431D33;
+  --color-neo-coral: #F9B4A6; /* coral · Pantone 487 C (solo fondos/acentos; texto encima en vino) */
   --color-neo-green: #1C796A;
-  --color-neo-dark: #283C43;
-  --color-neo-background: #FCF8F7;
+  --color-neo-dark: #2B1D26;
+  --color-neo-background: #FDF7F5;
   --color-neo-surface: #FFFFFF;
-  --color-neo-border: #DEDEDE;
-  --color-neo-muted: #64747A;
-  --color-neo-pink-light: #F8DDE2;
+  --color-neo-border: #E6DADD;
+  --color-neo-muted: #6F6168;
+  --color-neo-pink-light: #FDE8E3;
   --color-neo-green-light: #E8F3EF;
   --color-neo-warning: #F2B84B;
-  --color-neo-neutral: #F4F5F5;
+  --color-neo-neutral: #F6F2F3;
 
-  --shadow-neo-card: 0 2px 8px rgba(40, 60, 67, 0.06);
+  --shadow-neo-card: 0 2px 8px rgba(92, 41, 70, 0.08);
 
   --radius-neo-card: 1rem;
   --radius-neo-button: 0.75rem;
@@ -44,11 +46,11 @@
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
-  h1 { font-size: var(--text-neo-h1); font-weight: 700; }
+  h1 { font-size: var(--text-neo-h1); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
   h2 { font-size: var(--text-neo-h2); font-weight: 600; }
   h3 { font-size: var(--text-neo-h3); font-weight: 600; }
   :focus-visible {
-    outline: 2px solid var(--color-neo-green);
+    outline: 2px solid var(--color-neo-primary);
     outline-offset: 2px;
   }
 }

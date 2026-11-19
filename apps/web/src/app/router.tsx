@@ -1,3 +1,12 @@
+import { CoachContentPage } from '@/features/content/CoachContentPage';
+import { ContentFormPage } from '@/features/content/ContentFormPage';
+import { UserContentPage } from '@/features/content/UserContentPage';
+import { ContentDetailPage } from '@/features/content/ContentDetailPage';
+import { CoachChallengesPage } from '@/features/challenges/CoachChallengesPage';
+import { ChallengeFormPage } from '@/features/challenges/ChallengeFormPage';
+import { CoachChallengeDetailPage } from '@/features/challenges/CoachChallengeDetailPage';
+import { UserChallengesPage } from '@/features/challenges/UserChallengesPage';
+import { UserChallengeDetailPage } from '@/features/challenges/UserChallengeDetailPage';
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { UserLayout } from './layouts/UserLayout';
 import { CoachLayout } from './layouts/CoachLayout';
@@ -48,8 +57,10 @@ const userChildren: RouteObject[] = [
   { path: rel(userRoutes.nutritionDiary, '/app'), element: <DiaryPage /> },
   { path: rel(userRoutes.nutritionSchedules, '/app'), element: <SchedulesPage /> },
   { path: rel(userRoutes.nutritionReminders, '/app'), element: <Navigate to={userRoutes.nutritionSchedules} replace /> },
-  { path: rel(userRoutes.challenges, '/app'), element: page('Retos', 'U07 · HU-30 (posterior al MVP)') },
-  { path: rel(userRoutes.challenge(), '/app'), element: page('Reto', 'U07 · HU-30 (posterior al MVP)') },
+  { path: rel(userRoutes.challenges, '/app'), element: <UserChallengesPage /> },
+  { path: rel(userRoutes.challenge(), '/app'), element: <UserChallengeDetailPage /> },
+  { path: rel(userRoutes.content, '/app'), element: <UserContentPage /> },
+  { path: rel(userRoutes.contentItem(), '/app'), element: <ContentDetailPage /> },
   { path: rel(userRoutes.profile, '/app'), element: <ProfilePage /> },
   { path: rel(userRoutes.notifications, '/app'), element: <NotificationsPage /> },
 ];
@@ -71,8 +82,13 @@ const coachChildren: RouteObject[] = [
   { path: rel(coachRoutes.nutritionPlanEdit(), '/coach'), element: <PlanEditorPage /> },
   { path: rel(coachRoutes.nutritionPlanAssignments(), '/coach'), element: <PlanAssignmentsPage /> },
   { path: rel(coachRoutes.foodReviews, '/coach'), element: <FoodReviewsPage /> },
-  { path: rel(coachRoutes.content, '/coach'), element: page('Contenido', 'C04 · HU-33 (posterior al MVP)') },
-  { path: rel(coachRoutes.challenges, '/coach'), element: page('Retos', 'C08 · HU-29 (posterior al MVP)') },
+  { path: rel(coachRoutes.content, '/coach'), element: <CoachContentPage /> },
+  { path: rel(coachRoutes.contentCreate, '/coach'), element: <ContentFormPage /> },
+  { path: rel(coachRoutes.contentEdit(), '/coach'), element: <ContentFormPage /> },
+  { path: rel(coachRoutes.challenges, '/coach'), element: <CoachChallengesPage /> },
+  { path: rel(coachRoutes.challengesCreate, '/coach'), element: <ChallengeFormPage /> },
+  { path: rel(coachRoutes.challenge(), '/coach'), element: <CoachChallengeDetailPage /> },
+  { path: rel(coachRoutes.challengeEdit(), '/coach'), element: <ChallengeFormPage /> },
   { path: rel(coachRoutes.statistics, '/coach'), element: page('Estadísticas', 'C05 · HU-31 (posterior al MVP)') },
   { path: rel(coachRoutes.messages, '/coach'), element: page('Mensajes', 'C09 · HU-32 (posterior al MVP)') },
   { path: rel(coachRoutes.settings, '/coach'), element: <SettingsPage /> },

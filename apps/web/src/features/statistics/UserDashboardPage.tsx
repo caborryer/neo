@@ -79,6 +79,14 @@ export function UserDashboardPage() {
           <EmptyState title="Aún no tienes un plan de alimentación" description="Tu Coach te lo asignará pronto. Mientras tanto puedes llevar tu diario." action={<Link to={userRoutes.nutritionDiary} className="text-sm font-medium text-neo-primary-dark hover:underline">Ir al diario</Link>} />
         )}
       </AppCard>
+
+      <AppCard title="Para ti">
+        <p className="mb-2 text-sm text-neo-muted">Recetas, tips y videos de tu Coach.</p>
+        <div className="flex flex-wrap gap-4 text-sm">
+          <Link to={userRoutes.content} className="font-medium text-neo-primary-dark hover:underline">Ver contenido</Link>
+          <Link to={userRoutes.challenges} className="font-medium text-neo-primary-dark hover:underline">Ver retos</Link>
+        </div>
+      </AppCard>
     </div>
   );
 }

@@ -27,7 +27,10 @@ Ejecuta esta lista en el servidor de pruebas antes de cada entrega. Ningún fluj
 - [ ] Ver entrenamiento del día, marcar completado, enviar feedback (Sí/Parcial/No, sensación, comida previa).
 - [ ] Mi plan nutricional, diario de comidas (borrador → enviar a la Coach), foto de comida.
 - [ ] Perfil: editar datos, cambiar contraseña (cierra otras sesiones), horarios de comida, preferencias de recordatorio.
-- [ ] Estadísticas y retos.
+- [ ] Estadísticas.
+- [ ] Contenido: ver lista por categoría, abrir un artículo y reproducir un video; los borradores no aparecen.
+- [ ] Retos: inscribirse, completar una sesión y ver avanzar el progreso; marcar "Parcial" lo descuenta; al llegar a la meta llega el aviso.
+- [ ] Coach: crear/editar/publicar/eliminar contenido; crear reto, publicarlo y ver el avance de participantes (meta y fechas bloqueadas con participantes).
 
 ## Seguridad
 - [ ] Usuaria no accede a `/coach/*` ni a recursos de otra usuaria (respuesta 404/403).

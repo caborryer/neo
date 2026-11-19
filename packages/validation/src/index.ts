@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { PAGINATION } from '@neo/config';
 import {
+  ContentCategory,
+  ContentType,
   DayOfWeek,
   FeedbackCompletion,
   FoodUnit,
@@ -453,3 +455,68 @@ export const upsertFoodScheduleSchema = z.object({
 });
 export type UpsertFoodScheduleInput = z.output<typeof upsertFoodScheduleSchema>;
 export const foodScheduleParamSchema = z.object({ mealType: z.nativeEnum(MealType) });
+
+// ─── Contenido (HU-33) ─────────────────────────────────────────────────
+
+const emptyToNull = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? null : v);
+
+const contentBaseSchema = z.object({
+  title: z.string({ error: 'El título es obligatorio' }).trim().min(1, 'El título es obligatorio').max(120, 'Máximo 120 caracteres'),
+  description: z.preprocess(emptyToNull, z.string().trim().max(500, 'Máximo 500 caracteres').nullish()),
+  category: z.nativeEnum(ContentCategory, { error: 'Selecciona una categoría' }),
+  type: z.nativeEnum(ContentType, { error: 'Selecciona el tipo' }),
+  body: z.preprocess(emptyToNull, z.string().trim().max(20000, 'Máximo 20.000 caracteres').nullish()),
+  /** Enlace o ID de YouTube; el esquema lo normaliza al ID. */
+  video: z.preprocess(emptyToNull, youtubeVideoSchema.nullish()),
+  thumbnailAssetId: z.preprocess(emptyToNull, z.string().uuid('Imagen inválida').nullish()),
+  published: z.boolean().default(false),
+});
+
+/** Un artículo necesita texto y un video necesita enlace de YouTube. */
+export function contentCompletenessIssue(c: { type: ContentType; body?: string | null; video?: string | null }): { path: string; message: string } | null {
+  if (c.type === ContentType.ARTICLE && !c.body) return { path: 'body', message: 'Escribe el texto del artículo' };
+  if (c.type === ContentType.VIDEO && !c.video) return { path: 'video', message: 'Ingresa un enlace o ID de YouTube' };
+  return null;
+}
+
+export const createContentSchema = contentBaseSchema.superRefine((v, ctx) => {
+  const issue = contentCompletenessIssue(v);
+  if (issue) ctx.addIssue({ code: 'custom', path: [issue.path], message: issue.message });
+});
+export type CreateContentInput = z.output<typeof createContentSchema>;
+
+export const updateContentSchema = contentBaseSchema.partial().strict();
+export type UpdateContentInput = z.output<typeof updateContentSchema>;
+
+export const listContentQuerySchema = paginationQuerySchema.extend({
+  published: z.enum(['true', 'false']).optional(),
+  category: z.nativeEnum(ContentCategory).optional(),
+  type: z.nativeEnum(ContentType).optional(),
+});
+export type ListContentQuery = z.output<typeof listContentQuerySchema>;
+
+// ─── Retos (HU-29, HU-30) ──────────────────────────────────────────────
+
+const challengeBaseSchema = z.object({
+  name: z.string({ error: 'El nombre es obligatorio' }).trim().min(1, 'El nombre es obligatorio').max(120, 'Máximo 120 caracteres'),
+  description: z.preprocess(emptyToNull, z.string().trim().max(2000, 'Máximo 2000 caracteres').nullish()),
+  category: z.string({ error: 'La categoría es obligatoria' }).trim().min(1, 'La categoría es obligatoria').max(40, 'Máximo 40 caracteres'),
+  goal: z.number({ error: 'El objetivo es obligatorio' }).int('Debe ser un número entero').min(1, 'Mínimo 1 sesión').max(365, 'Máximo 365 sesiones'),
+  startDate: dateOnlySchema,
+  endDate: dateOnlySchema,
+  published: z.boolean().default(false),
+});
+
+export const createChallengeSchema = challengeBaseSchema.refine((v) => v.endDate >= v.startDate, {
+  path: ['endDate'],
+  message: 'La fecha de fin no puede ser anterior al inicio',
+});
+export type CreateChallengeInput = z.output<typeof createChallengeSchema>;
+
+export const updateChallengeSchema = challengeBaseSchema.partial().strict();
+export type UpdateChallengeInput = z.output<typeof updateChallengeSchema>;
+
+export const listChallengesQuerySchema = paginationQuerySchema.extend({
+  published: z.enum(['true', 'false']).optional(),
+});
+export type ListChallengesQuery = z.output<typeof listChallengesQuerySchema>;

@@ -23,7 +23,7 @@ test.describe('Seguridad básica', () => {
   test('credenciales incorrectas muestran un error genérico', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel('Correo').fill(E2E.coachEmail);
-    await page.getByLabel('Contraseña').fill('incorrecta-123');
+    await page.getByLabel('Contraseña', { exact: true }).fill('incorrecta-123');
     await page.getByRole('button', { name: 'Iniciar sesión' }).click();
     await expect(page.getByText('Correo o contraseña incorrectos')).toBeVisible();
   });

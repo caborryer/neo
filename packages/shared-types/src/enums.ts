@@ -117,6 +117,7 @@ export enum NotificationType {
   FEEDBACK_RECEIVED = 'FEEDBACK_RECEIVED',
   MEAL_LOG_PENDING_REVIEW = 'MEAL_LOG_PENDING_REVIEW',
   MEAL_LOG_REVIEWED = 'MEAL_LOG_REVIEWED',
+  CHALLENGE_COMPLETED = 'CHALLENGE_COMPLETED',
 }
 
 /** Suposición (HU-02): reutiliza el mismo token para invitar y para restablecer contraseña. */

@@ -11,7 +11,7 @@ export async function apiLogin(request: APIRequestContext, email: string, passwo
 export async function uiLogin(page: Page, email: string, password: string) {
   await page.goto('/login');
   await page.getByLabel('Correo').fill(email);
-  await page.getByLabel('Contraseña').fill(password);
+  await page.getByLabel('Contraseña', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
 }
 
