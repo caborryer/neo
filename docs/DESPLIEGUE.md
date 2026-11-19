@@ -62,3 +62,32 @@ Copia los archivos fuera del servidor (rclone, rsync o S3): una copia en el mism
 - Optimización/redimensionado de imágenes (RNF-08) no está implementada; el límite de subida es 5 MB.
 - Recordatorios: solo se guarda la preferencia; no hay envío automático.
 - Sin monitoreo externo: configura un chequeo (UptimeRobot o similar) sobre `/api/v1/health`.
+
+## 8. Montar el servidor desde cero (VPS)
+Probado conceptualmente para Hetzner, DigitalOcean, Vultr o Lightsail: cualquier Ubuntu 24.04 con 2 vCPU / 4 GB sirve. Elige región EE. UU. si tus usuarias están en Colombia.
+
+1. **Crear el servidor** con tu llave SSH pública. Anota la IP.
+2. **DNS**: registro **A** `neo.tudominio.com` → IP del servidor.
+3. **Acceso seguro** (como root, una sola vez):
+   ```bash
+   adduser deploy && usermod -aG sudo deploy
+   rsync --archive --chown=deploy:deploy ~/.ssh /home/deploy
+   sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/; s/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+   systemctl restart ssh
+   ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw --force enable
+   apt update && apt -y upgrade && apt -y install unattended-upgrades fail2ban
+   ```
+4. **Docker** (como `deploy`): `curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker deploy` y vuelve a entrar.
+5. **Código**: `sudo mkdir -p /opt/neo && sudo chown deploy /opt/neo && git clone <repo> /opt/neo`. Si el repo es privado, usa una *deploy key* de solo lectura.
+6. Sigue la sección 2 (`.env.production`, `up -d --build`) y la 3 (verificación).
+7. **Backups**: cron diario de la sección 5 y copia externa (rclone a otro proveedor).
+8. **Monitoreo**: UptimeRobot sobre `/api/v1/health`.
+
+## 9. Actualizar con un comando: `scripts/deploy.sh`
+En el servidor: `./scripts/deploy.sh` hace backup, `git pull`, reconstruye, espera a que `/api/v1/health` responda `database: up` y, si falla, imprime los logs y el comando para volver atrás.
+
+## 10. Despliegue automático desde GitHub (opcional)
+`deploy.yml` (ponlo en `.github/workflows/`) ejecuta `scripts/deploy.sh` por SSH al pulsar *Run workflow* o al publicar una etiqueta `v*`.
+1. En el repo: *Settings → Environments → New environment* `production` (activa *Required reviewers* si quieres aprobar cada despliegue).
+2. En ese entorno agrega los secretos `DEPLOY_HOST` (IP o dominio), `DEPLOY_USER` (`deploy`) y `DEPLOY_SSH_KEY` (llave privada **dedicada**, cuya pública agregas a `~deploy/.ssh/authorized_keys`).
+3. Flujo recomendado: CI en verde en `main` → `git tag v1.0.0 && git push --tags` → se despliega.
