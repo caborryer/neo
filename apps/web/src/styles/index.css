@@ -1,0 +1,54 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+/* Sistema de diseño de Neo. Fuente: docs/ESPECIFICACION.md §3.2–§3.5 */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-neo-primary: #E4798D;
+  --color-neo-primary-dark: #D95770;
+  --color-neo-green: #1C796A;
+  --color-neo-dark: #283C43;
+  --color-neo-background: #FCF8F7;
+  --color-neo-surface: #FFFFFF;
+  --color-neo-border: #DEDEDE;
+  --color-neo-muted: #64747A;
+  --color-neo-pink-light: #F8DDE2;
+  --color-neo-green-light: #E8F3EF;
+  --color-neo-warning: #F2B84B;
+  --color-neo-neutral: #F4F5F5;
+
+  --shadow-neo-card: 0 2px 8px rgba(40, 60, 67, 0.06);
+
+  --radius-neo-card: 1rem;
+  --radius-neo-button: 0.75rem;
+  --radius-neo-input: 0.625rem;
+  --radius-neo-modal: 1rem;
+
+  /* Tipografía (§3.3) */
+  --text-neo-h1: 1.875rem;
+  --text-neo-h2: 1.5rem;
+  --text-neo-h3: 1.125rem;
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+  }
+  body {
+    margin: 0;
+    background: var(--color-neo-background);
+    color: var(--color-neo-dark);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 { font-size: var(--text-neo-h1); font-weight: 700; }
+  h2 { font-size: var(--text-neo-h2); font-weight: 600; }
+  h3 { font-size: var(--text-neo-h3); font-weight: 600; }
+  :focus-visible {
+    outline: 2px solid var(--color-neo-green);
+    outline-offset: 2px;
+  }
+}

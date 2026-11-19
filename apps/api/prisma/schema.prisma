@@ -1,0 +1,581 @@
+// Neo — esquema de base de datos. Fuente: docs/ESPECIFICACION.md §7.
+// Las restricciones que Prisma no expresa (Coach única, exclusion constraint de planes,
+// checks) viven en prisma/sql/constraints.sql y se aplican en una migración propia.
+// Los campos marcados "Suposición" no están en el spec y se confirmarán con la Coach.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────
+
+enum UserRole {
+  COACH
+  USER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum VideoProvider {
+  YOUTUBE
+}
+
+enum VideoVisibility {
+  UNLISTED
+  PRIVATE
+}
+
+enum WorkoutAssignmentStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  PARTIAL
+  SKIPPED
+  CANCELLED
+}
+
+enum FeedbackCompletion {
+  YES
+  NO
+  PARTIAL
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum MealType {
+  BREAKFAST
+  MORNING_SNACK
+  LUNCH
+  AFTERNOON_SNACK
+  DINNER
+  OTHER
+}
+
+enum FoodUnit {
+  GRAMS
+  MILLILITERS
+  UNITS
+  CUPS
+  TABLESPOONS
+  TEASPOONS
+  SLICES
+}
+
+enum NutritionAssignmentStatus {
+  ACTIVE
+  ENDED
+}
+
+enum MealLogStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWED
+  NEEDS_CHANGES
+}
+
+enum ChallengeGoalUnit {
+  WORKOUT_SESSIONS
+}
+
+enum ChallengeParticipantStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum ContentCategory {
+  RECIPES
+  NUTRITION
+  TIPS
+  TECHNIQUE
+  VIDEOS
+}
+
+enum ContentType {
+  ARTICLE
+  VIDEO
+}
+
+enum MediaVisibility {
+  PRIVATE
+}
+
+enum NotificationType {
+  WORKOUT_ASSIGNED
+  WORKOUT_RESCHEDULED
+  NUTRITION_PLAN_ASSIGNED
+  CHALLENGE_PUBLISHED
+  MEAL_REMINDER
+  WORKOUT_REMINDER
+  FEEDBACK_RECEIVED
+  MEAL_LOG_PENDING_REVIEW
+  MEAL_LOG_REVIEWED
+}
+
+enum PasswordTokenPurpose {
+  INVITATION
+  RESET
+}
+
+// ─── Usuarios y acceso (§7.3, §7.4) ─────────────────────────────────────
+
+model User {
+  id              String     @id @default(uuid())
+  firstName       String
+  lastName        String
+  email           String     @unique
+  passwordHash    String
+  role            UserRole
+  status          UserStatus @default(PENDING)
+  coachId         String?
+  coach           User?      @relation("CoachUsers", fields: [coachId], references: [id])
+  clients         User[]     @relation("CoachUsers")
+  timezone        String     @default("America/Bogota")
+  avatarAssetId   String?
+  accessExpiresAt DateTime?
+  activatedAt     DateTime?
+  // Suposición (HU-16): meta semanal de entrenamientos; la Coach puede editarla.
+  weeklyGoal      Int        @default(3)
+  // Suposición (HU-28): fecha en que aceptó la política de privacidad y el uso de fotos.
+  privacyConsentAt DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  accessEvents         UserAccessEvent[]        @relation("AccessEventUser")
+  accessChanges        UserAccessEvent[]        @relation("AccessEventChangedBy")
+  refreshSessions      RefreshSession[]
+  passwordResetTokens  PasswordResetToken[]
+  createdWorkouts      Workout[]                @relation("WorkoutCreatedBy")
+  workoutAssignments   WorkoutAssignment[]      @relation("AssignmentUser")
+  assignedWorkouts     WorkoutAssignment[]      @relation("AssignmentAssignedBy")
+  createdPlans         NutritionPlan[]          @relation("PlanCreatedBy")
+  nutritionAssignments NutritionPlanAssignment[] @relation("PlanAssignmentUser")
+  assignedPlans        NutritionPlanAssignment[] @relation("PlanAssignmentAssignedBy")
+  mealLogs             MealLog[]                @relation("MealLogUser")
+  reviewedMealLogs     MealLog[]                @relation("MealLogReviewedBy")
+  foodSchedules        FoodSchedule[]
+  challengeParticipations ChallengeParticipant[]
+  createdChallenges    Challenge[]
+  createdContent       Content[]
+  mediaAssets          MediaAsset[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  riskFollowUpsAbout   RiskFollowUp[]           @relation("FollowUpUser")
+  riskFollowUpsMade    RiskFollowUp[]           @relation("FollowUpBy")
+
+  @@index([coachId])
+  @@index([role, status])
+}
+
+model UserAccessEvent {
+  id             String      @id @default(uuid())
+  userId         String
+  user           User        @relation("AccessEventUser", fields: [userId], references: [id])
+  changedById    String
+  changedBy      User        @relation("AccessEventChangedBy", fields: [changedById], references: [id])
+  previousStatus UserStatus?
+  newStatus      UserStatus
+  reason         String?
+  createdAt      DateTime    @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// ─── Autenticación (§7.1, §10.1) ────────────────────────────────────────
+
+model RefreshSession {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Solo se guarda el hash del refresh token (nunca el token).
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?
+  userAgent    String?
+  ipAddress    String?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String               @id @default(uuid())
+  userId    String
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String               @unique
+  purpose   PasswordTokenPurpose @default(RESET)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime             @default(now())
+
+  @@index([userId])
+}
+
+// ─── Archivos (§7.10) ───────────────────────────────────────────────────
+
+model MediaAsset {
+  id         String          @id @default(uuid())
+  ownerId    String
+  owner      User            @relation(fields: [ownerId], references: [id])
+  fileName   String
+  mimeType   String
+  storageKey String          @unique
+  sizeBytes  Int
+  visibility MediaVisibility @default(PRIVATE)
+  createdAt  DateTime        @default(now())
+
+  workoutThumbnails Workout[] @relation("WorkoutThumbnail")
+  mealLogImages     MealLog[] @relation("MealLogImage")
+  contentThumbnails Content[] @relation("ContentThumbnail")
+
+  @@index([ownerId])
+}
+
+// ─── Entrenamientos (§7.5, §7.6) ────────────────────────────────────────
+
+model Workout {
+  id               String          @id @default(uuid())
+  title            String
+  description      String?
+  durationMinutes  Int
+  difficulty       String
+  category         String
+  videoProvider    VideoProvider   @default(YOUTUBE)
+  videoId          String
+  videoVisibility  VideoVisibility @default(UNLISTED)
+  thumbnailAssetId String?
+  thumbnail        MediaAsset?     @relation("WorkoutThumbnail", fields: [thumbnailAssetId], references: [id])
+  equipment        Json?
+  tips             Json?
+  isPublished      Boolean         @default(false)
+  createdById      String
+  createdBy        User            @relation("WorkoutCreatedBy", fields: [createdById], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  assignments WorkoutAssignment[]
+
+  @@index([isPublished])
+}
+
+model WorkoutAssignment {
+  id            String                  @id @default(uuid())
+  workoutId     String
+  workout       Workout                 @relation(fields: [workoutId], references: [id])
+  userId        String
+  user          User                    @relation("AssignmentUser", fields: [userId], references: [id])
+  scheduledDate DateTime                @db.Date
+  // El spec indica "hora opcional" en el calendario (U02). Formato HH:mm.
+  scheduledTime String?
+  status        WorkoutAssignmentStatus @default(SCHEDULED)
+  assignedById  String
+  assignedBy    User                    @relation("AssignmentAssignedBy", fields: [assignedById], references: [id])
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  sessions WorkoutSession[]
+
+  @@index([userId, scheduledDate])
+  @@index([workoutId])
+  @@index([status])
+}
+
+model WorkoutSession {
+  id                   String                  @id @default(uuid())
+  assignmentId         String
+  assignment           WorkoutAssignment       @relation(fields: [assignmentId], references: [id])
+  startedAt            DateTime
+  completedAt          DateTime?
+  status               WorkoutAssignmentStatus
+  completionPercentage Int?
+  durationMinutes      Int?
+  // §4.2 y §7.6: idempotencia ante reintentos HTTP. No se impone unicidad por asignación
+  // hasta definir la política de repetición (S3: una sesión por asignación en el MVP, validado en el servicio).
+  idempotencyKey       String?
+  createdAt            DateTime                @default(now())
+
+  feedback            WorkoutFeedback?
+  challengeActivities ChallengeActivity[]
+
+  @@unique([assignmentId, idempotencyKey])
+  @@index([assignmentId])
+}
+
+model WorkoutFeedback {
+  id                   String             @id @default(uuid())
+  // 0..1 por sesión (§7.2).
+  sessionId            String             @unique
+  session              WorkoutSession     @relation(fields: [sessionId], references: [id])
+  completed            FeedbackCompletion
+  // Suposición (S5): porcentaje 1–99 cuando la respuesta es PARTIAL.
+  completionPercentage Int?
+  notCompletedReason   String?
+  feelingRating        Int
+  feelingDescription   String?
+  ateBeforeWorkout     Boolean
+  preWorkoutMeal       String?
+  createdAt            DateTime           @default(now())
+}
+
+// ─── Nutrición (§7.7) ───────────────────────────────────────────────────
+
+model NutritionPlan {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdById String
+  createdBy   User     @relation("PlanCreatedBy", fields: [createdById], references: [id])
+  isTemplate  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  versions NutritionPlanVersion[]
+}
+
+model NutritionPlanVersion {
+  id            String        @id @default(uuid())
+  planId        String
+  plan          NutritionPlan @relation(fields: [planId], references: [id])
+  versionNumber Int
+  notes         String?
+  // Una versión publicada es inmutable (RNF-18). Mientras sea null es un borrador editable.
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+
+  days        NutritionPlanDay[]
+  assignments NutritionPlanAssignment[]
+
+  @@unique([planId, versionNumber])
+}
+
+model NutritionPlanDay {
+  id        String               @id @default(uuid())
+  versionId String
+  version   NutritionPlanVersion @relation(fields: [versionId], references: [id])
+  dayNumber Int
+  dayName   DayOfWeek?
+
+  meals NutritionPlanMeal[]
+
+  @@unique([versionId, dayNumber])
+}
+
+model NutritionPlanMeal {
+  id            String           @id @default(uuid())
+  dayId         String
+  day           NutritionPlanDay @relation(fields: [dayId], references: [id])
+  mealType      MealType
+  title         String
+  scheduledTime String?
+  instructions  String?
+
+  foods    NutritionPlanFood[]
+  mealLogs MealLog[]
+
+  @@index([dayId])
+}
+
+model NutritionPlanFood {
+  id       String            @id @default(uuid())
+  mealId   String
+  meal     NutritionPlanMeal @relation(fields: [mealId], references: [id])
+  name     String
+  quantity Decimal           @db.Decimal(10, 2)
+  unit     FoodUnit
+  notes    String?
+
+  @@index([mealId])
+}
+
+model NutritionPlanAssignment {
+  id           String                    @id @default(uuid())
+  userId       String
+  user         User                      @relation("PlanAssignmentUser", fields: [userId], references: [id])
+  versionId    String
+  version      NutritionPlanVersion      @relation(fields: [versionId], references: [id])
+  assignedById String
+  assignedBy   User                      @relation("PlanAssignmentAssignedBy", fields: [assignedById], references: [id])
+  startDate    DateTime                  @db.Date
+  endDate      DateTime?                 @db.Date
+  status       NutritionAssignmentStatus @default(ACTIVE)
+  createdAt    DateTime                  @default(now())
+
+  @@index([userId, startDate])
+  @@index([versionId])
+}
+
+// ─── Diario alimenticio (§7.8) ──────────────────────────────────────────
+
+model MealLog {
+  id            String             @id @default(uuid())
+  userId        String
+  user          User               @relation("MealLogUser", fields: [userId], references: [id])
+  // Opcional: permite registrar comidas fuera del plan.
+  plannedMealId String?
+  plannedMeal   NutritionPlanMeal? @relation(fields: [plannedMealId], references: [id])
+  mealType      MealType
+  description   String
+  imageAssetId  String?
+  image         MediaAsset?        @relation("MealLogImage", fields: [imageAssetId], references: [id])
+  consumedAt    DateTime
+  status        MealLogStatus      @default(DRAFT)
+  coachComment  String?
+  reviewedAt    DateTime?
+  reviewedById  String?
+  reviewedBy    User?              @relation("MealLogReviewedBy", fields: [reviewedById], references: [id])
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([userId, consumedAt])
+  @@index([status])
+}
+
+// Horarios configurados por la usuaria; independientes de los sugeridos por el plan.
+model FoodSchedule {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  mealType        MealType
+  scheduledTime   String
+  reminderEnabled Boolean  @default(false)
+
+  @@unique([userId, mealType])
+}
+
+// ─── Retos (§7.9) — posterior al MVP ────────────────────────────────────
+
+model Challenge {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  category    String
+  goal        Int
+  goalUnit    ChallengeGoalUnit @default(WORKOUT_SESSIONS)
+  startDate   DateTime          @db.Date
+  endDate     DateTime          @db.Date
+  isActive    Boolean           @default(true)
+  createdById String
+  createdBy   User              @relation(fields: [createdById], references: [id])
+  createdAt   DateTime          @default(now())
+
+  participants ChallengeParticipant[]
+}
+
+model ChallengeParticipant {
+  id          String                     @id @default(uuid())
+  userId      String
+  user        User                       @relation(fields: [userId], references: [id])
+  challengeId String
+  challenge   Challenge                  @relation(fields: [challengeId], references: [id])
+  progress    Int                        @default(0)
+  status      ChallengeParticipantStatus @default(IN_PROGRESS)
+  joinedAt    DateTime                   @default(now())
+
+  activities ChallengeActivity[]
+
+  @@unique([userId, challengeId])
+}
+
+model ChallengeActivity {
+  id               String               @id @default(uuid())
+  participantId    String
+  participant      ChallengeParticipant @relation(fields: [participantId], references: [id])
+  workoutSessionId String
+  workoutSession   WorkoutSession       @relation(fields: [workoutSessionId], references: [id])
+  contribution     Int                  @default(1)
+  createdAt        DateTime             @default(now())
+
+  // Evita contar dos veces la misma sesión (§4.6).
+  @@unique([participantId, workoutSessionId])
+}
+
+// ─── Contenido, notificaciones y auditoría (§7.10) ──────────────────────
+
+model Content {
+  id               String          @id @default(uuid())
+  title            String
+  description      String?
+  category         ContentCategory
+  type             ContentType
+  thumbnailAssetId String?
+  thumbnail        MediaAsset?     @relation("ContentThumbnail", fields: [thumbnailAssetId], references: [id])
+  published        Boolean         @default(false)
+  createdById      String
+  createdBy        User            @relation(fields: [createdById], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  title     String
+  message   String
+  // Referencia opcional para navegar al recurso (por ejemplo { "assignmentId": "..." }).
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, readAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  resource   String
+  resourceId String?
+  // Sin contraseñas, tokens ni datos sensibles innecesarios (§7.10).
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([resource, resourceId])
+  @@index([actorId, createdAt])
+}
+
+// ─── Fase 4: configuración y seguimiento de riesgo (§4.8) ───────────────
+
+// Configuración de la aplicación como pares clave/valor (p. ej. "risk" → umbrales de alerta, HU-15).
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// Acción de seguimiento que la Coach registra ante una alerta de riesgo (HU-27).
+model RiskFollowUp {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation("FollowUpUser", fields: [userId], references: [id])
+  coachId   String
+  coach     User     @relation("FollowUpBy", fields: [coachId], references: [id])
+  // Códigos de las alertas vigentes al momento del seguimiento (INACTIVITY, ...).
+  reasons   String[]
+  note      String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}

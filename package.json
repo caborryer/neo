@@ -1,0 +1,33 @@
+{
+  "name": "neo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neo: plataforma web de entrenamiento, nutrición y acompañamiento personalizado",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "e2e"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "postinstall": "npm run build:packages && npm run generate -w @neo/api",
+    "build:packages": "npm run build -w @neo/config && npm run build -w @neo/shared-types && npm run build -w @neo/validation",
+    "build": "npm run build:packages && npm run build -w @neo/api && npm run build -w @neo/web",
+    "dev:api": "npm run start:dev -w @neo/api",
+    "dev:web": "npm run dev -w @neo/web",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "db:migrate": "npm run prisma:migrate -w @neo/api",
+    "db:seed": "npm run prisma:seed -w @neo/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run e2e -w @neo/e2e"
+  },
+  "devDependencies": {
+    "tsup": "^9.0.0",
+    "typescript": "5.9",
+    "vitest": "^5.1.0"
+  }
+}

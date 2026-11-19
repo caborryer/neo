@@ -1,0 +1,32 @@
+# Servicios de desarrollo de Neo (PostgreSQL y Mailpit). Las apps (web y api) se ejecutan con npm.
+services:
+  postgres:
+    image: postgres:16
+    container_name: neo-postgres
+    environment:
+      POSTGRES_USER: neo
+      POSTGRES_PASSWORD: neo
+      POSTGRES_DB: neo
+    ports:
+      - "5433:5432"
+    volumes:
+      - neo_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neo -d neo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Almacenamiento S3 compatible: se define en la Fase 3 (fotos del diario).
+  # MinIO dejó de publicar su imagen en Docker Hub; se elegirá una alternativa
+  # (por ejemplo Cloudflare R2, AWS S3 o un emulador S3) cuando se implemente HU-22.
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: neo-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  neo_pgdata:
