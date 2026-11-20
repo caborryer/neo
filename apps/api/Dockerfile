@@ -20,9 +20,12 @@ ENV NODE_ENV=production \
     STORAGE_DIR=/data/storage
 WORKDIR /app/apps/api
 COPY --from=build --chown=node:node /app /app
-# El volumen de fotos hereda este dueño al crearse por primera vez.
 RUN mkdir -p /data/storage && chown -R node:node /data
-USER node
+# Arranca como root solo para que el entrypoint corrija el dueño del volumen de fotos (Railway lo monta como root)
+# y baje enseguida al usuario "node": el proceso de la API nunca corre como root.
+COPY apps/api/docker-entrypoint.sh /usr/local/bin/neo-entrypoint
+RUN chmod +x /usr/local/bin/neo-entrypoint
+ENTRYPOINT ["neo-entrypoint"]
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.API_PORT||3000)+'/api/v1/health').then(r=>r.json()).then(j=>process.exit(j.data&&j.data.database?0:1)).catch(()=>process.exit(1))"

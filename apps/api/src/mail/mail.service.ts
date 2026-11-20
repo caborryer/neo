@@ -12,8 +12,12 @@ export class MailService {
   private readonly transporter: Transporter;
   private readonly from: string;
   private readonly webOrigin: string;
+  private readonly provider: 'smtp' | 'resend';
+  private readonly resendKey?: string;
 
   constructor(config: ConfigService) {
+    this.provider = config.get<'smtp' | 'resend'>('MAIL_PROVIDER') ?? 'smtp';
+    this.resendKey = config.get<string>('RESEND_API_KEY');
     this.transporter = createTransport({
       host: config.get<string>('SMTP_HOST') ?? 'localhost',
       port: config.get<number>('SMTP_PORT') ?? 1025,
@@ -37,6 +41,7 @@ export class MailService {
   /** Un fallo de envío nunca rompe la operación principal: se registra y se devuelve false. */
   private async send(to: string, content: { subject: string; html: string; text: string }): Promise<boolean> {
     try {
+      if (this.provider === 'resend') return await this.sendWithResend(to, content);
       await this.transporter.sendMail({ from: this.from, to, ...content });
       return true;
     } catch (err) {
@@ -44,5 +49,20 @@ export class MailService {
       this.logger.error(`No se pudo enviar el correo a ${maskEmail(to)}: ${err instanceof Error ? err.message : String(err)}`);
       return false;
     }
+  }
+
+  /**
+   * Envío por API HTTPS (Resend). Railway bloquea SMTP (25/465/587/2525) fuera del plan Pro, así que allí es la vía por defecto.
+   * Nunca se registra el cuerpo de la respuesta de error con el contenido del mensaje.
+   */
+  private async sendWithResend(to: string, content: { subject: string; html: string; text: string }): Promise<boolean> {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${this.resendKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: this.from, to: [to], subject: content.subject, html: content.html, text: content.text }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) throw new Error(`Resend respondió ${res.status}`);
+    return true;
   }
 }

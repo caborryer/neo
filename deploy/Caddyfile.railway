@@ -1,0 +1,44 @@
+# Caddy para Railway: Railway termina el HTTPS en su borde, así que aquí Caddy solo sirve HTTP en $PORT.
+# Variables del servicio "web": PORT (la inyecta Railway) y API_UPSTREAM (p. ej. api.railway.internal:3000).
+{
+	auto_https off
+	admin off
+}
+
+:{$PORT:8080} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# YouTube: miniaturas (i.ytimg.com) y reproductor sin cookies (youtube-nocookie.com).
+		Content-Security-Policy "default-src 'self'; img-src 'self' data: blob: https://i.ytimg.com; frame-src https://www.youtube-nocookie.com; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		-Server
+	}
+
+	# Healthcheck de Railway para este servicio.
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	handle /api/* {
+		request_body {
+			max_size 8MB
+		}
+		# X-Real-IP lo pone el borde de Railway con la IP de la usuaria; Caddy no lo toca y la API lo lee (CLIENT_IP_HEADER).
+		reverse_proxy {$API_UPSTREAM:api.railway.internal:3000}
+	}
+
+	handle {
+		root * /srv
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		header /index.html Cache-Control "no-cache"
+		# La app es de una sola página: cualquier ruta que no sea un archivo devuelve index.html.
+		try_files {path} /index.html
+		file_server
+	}
+}

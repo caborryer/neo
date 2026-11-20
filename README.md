@@ -93,3 +93,4 @@ Fase 6 (contenido y retos):
 - **Contenido (HU-33)**: la Coach crea artículos y videos de YouTube (reproductor sin cookies), con borrador/publicado; las usuarias solo ven lo publicado.
 - **Retos (HU-29/30)**: la Coach crea retos con meta de sesiones y fechas; las usuarias se inscriben y el progreso lo calcula únicamente el servidor a partir de sus sesiones completadas.
 - Requiere migración: desde `apps/api`, `npm run prisma:migrate -- --name fase6` (y commitear `apps/api/prisma/migrations`).
+- Despliegue en Railway (alternativa al VPS): [`docs/RAILWAY.md`](docs/RAILWAY.md). Auditoría de seguridad: [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).

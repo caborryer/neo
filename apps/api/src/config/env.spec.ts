@@ -23,7 +23,7 @@ describe('validateEnv', () => {
 });
 
 describe('validateEnv · producción', () => {
-  const prod = { ...base, NODE_ENV: 'production', WEB_ORIGIN: 'https://neo.example.com', JWT_ACCESS_SECRET: 'x'.repeat(40), JWT_REFRESH_SECRET: 'y'.repeat(40) };
+  const prod = { ...base, NODE_ENV: 'production', SMTP_HOST: 'smtp.proveedor.com', WEB_ORIGIN: 'https://neo.example.com', JWT_ACCESS_SECRET: 'x'.repeat(40), JWT_REFRESH_SECRET: 'y'.repeat(40) };
 
   it('acepta una configuración correcta', () => {
     expect(validateEnv(prod).NODE_ENV).toBe('production');
@@ -37,6 +37,16 @@ describe('validateEnv · producción', () => {
   it('exige https y cookies seguras', () => {
     expect(() => validateEnv({ ...prod, WEB_ORIGIN: 'http://neo.example.com' })).toThrow(/https/);
     expect(() => validateEnv({ ...prod, COOKIE_SECURE: 'false' })).toThrow(/COOKIE_SECURE/);
+  });
+  it('exige un proveedor de correo real: SMTP distinto de localhost o Resend con su clave', () => {
+    expect(() => validateEnv({ ...prod, SMTP_HOST: 'localhost' })).toThrow(/SMTP_HOST/);
+    expect(() => validateEnv({ ...prod, SMTP_HOST: 'localhost', MAIL_PROVIDER: 'resend' })).toThrow(/RESEND_API_KEY/);
+    expect(validateEnv({ ...prod, SMTP_HOST: 'localhost', MAIL_PROVIDER: 'resend', RESEND_API_KEY: 're_123' }).MAIL_PROVIDER).toBe('resend');
+  });
+  it('lee PORT, API_HOST y CLIENT_IP_HEADER para Railway', () => {
+    const env = validateEnv({ ...prod, PORT: '8080', API_HOST: '::', CLIENT_IP_HEADER: 'x-real-ip' });
+    expect([env.PORT, env.API_HOST, env.CLIENT_IP_HEADER]).toEqual([8080, '::', 'x-real-ip']);
+    expect(() => validateEnv({ ...prod, CLIENT_IP_HEADER: 'x real ip; drop' })).toThrow(/CLIENT_IP_HEADER/);
   });
   it('rechaza DISABLE_RATE_LIMIT en producción pero lo permite fuera', () => {
     expect(() => validateEnv({ ...prod, DISABLE_RATE_LIMIT: 'true' })).toThrow(/DISABLE_RATE_LIMIT/);

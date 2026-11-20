@@ -2,6 +2,8 @@
 
 Despliegue en un único servidor Linux con Docker Compose: **Caddy** (HTTPS automático) + **API NestJS** + **PostgreSQL**. Los archivos están en `docker-compose.prod.yml`, `deploy/` y `scripts/`.
 
+> ¿Prefieres no administrar un servidor? Ver la alternativa en Railway: [`RAILWAY.md`](RAILWAY.md).
+
 > Estos artefactos se validaron estáticamente (`docker compose config`, `bash -n`). Haz el primer despliegue en un servidor de pruebas antes de usar el real.
 
 ## 1. Requisitos

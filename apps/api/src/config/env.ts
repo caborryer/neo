@@ -3,6 +3,12 @@ import { z } from 'zod';
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_PORT: z.coerce.number().int().positive().default(3000),
+  // Plataformas como Railway inyectan PORT (también lo usan sus healthchecks); si existe, manda sobre API_PORT.
+  PORT: z.coerce.number().int().positive().optional(),
+  // Interfaz de escucha. Railway usa red privada IPv6: allí debe ser "::" (escucha IPv4 e IPv6). Por defecto, todas las IPv4.
+  API_HOST: z.string().default('0.0.0.0'),
+  // Cabecera con la IP real de la usuaria cuando el proxy de confianza la sobrescribe (Railway: x-real-ip). Vacía = no se usa.
+  CLIENT_IP_HEADER: z.string().regex(/^[A-Za-z0-9-]+$/).optional(),
   WEB_ORIGIN: z.string().url().default('http://localhost:5173'),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL es obligatoria'),
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET debe tener al menos 32 caracteres'),
@@ -14,6 +20,9 @@ const schema = z.object({
     .enum(['true', 'false'])
     .optional()
     .transform((v) => (v === undefined ? undefined : v === 'true')),
+  // Correo: "smtp" (por defecto) o "resend" (API HTTPS; necesario en Railway sin plan Pro, que bloquea SMTP).
+  MAIL_PROVIDER: z.enum(['smtp', 'resend']).default('smtp'),
+  RESEND_API_KEY: z.string().optional(),
   SMTP_HOST: z.string().default('localhost'),
   SMTP_PORT: z.coerce.number().int().positive().default(1025),
   // Almacenamiento de imágenes: disco local en desarrollo; en producción se reemplaza por S3 (§9.2).
@@ -52,6 +61,8 @@ function productionProblems(env: z.infer<typeof schema>): string[] {
   }
   if (env.JWT_ACCESS_SECRET === env.JWT_REFRESH_SECRET) problems.push('JWT_ACCESS_SECRET y JWT_REFRESH_SECRET deben ser distintos');
   if (!env.WEB_ORIGIN.startsWith('https://')) problems.push('WEB_ORIGIN debe usar https:// (RNF-03)');
+  if (env.MAIL_PROVIDER === 'resend' && !env.RESEND_API_KEY) problems.push('RESEND_API_KEY es obligatoria con MAIL_PROVIDER=resend');
+  if (env.MAIL_PROVIDER === 'smtp' && env.SMTP_HOST === 'localhost') problems.push('SMTP_HOST sigue en localhost: configura tu proveedor de correo (SMTP_* o MAIL_PROVIDER=resend)');
   if (env.COOKIE_SECURE === false) problems.push('COOKIE_SECURE no puede ser false en producción');
   return problems;
 }
