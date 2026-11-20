@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { LogoutButton } from '@/features/auth/LogoutButton';
+import { MessagesLink } from '@/features/messages/MessagesLink';
 import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { coachRoutes } from '@/app/routes';
 
@@ -33,7 +34,7 @@ export function CoachLayout() {
             <Menu className="size-5" aria-hidden="true" />
           </button>
           <BrandLogo className="h-9" />
-          <div className="ml-auto"><NotificationBell to={coachRoutes.notifications} /></div>
+          <div className="ml-auto flex items-center"><MessagesLink to={coachRoutes.messages} /><NotificationBell to={coachRoutes.notifications} /></div>
         </header>
 
         {drawerOpen && (
@@ -52,7 +53,8 @@ export function CoachLayout() {
           </div>
         )}
 
-        <div className="hidden justify-end border-b border-neo-border bg-neo-surface px-6 py-2 md:flex">
+        <div className="hidden items-center justify-end border-b border-neo-border bg-neo-surface px-6 py-2 md:flex">
+          <MessagesLink to={coachRoutes.messages} />
           <NotificationBell to={coachRoutes.notifications} />
         </div>
 

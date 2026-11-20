@@ -19,6 +19,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { ContentModule } from './content/content.module';
 import { ChallengesModule } from './challenges/challenges.module';
+import { MessagesModule } from './messages/messages.module';
 import { FoodSchedulesModule } from './food-schedules/food-schedules.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { CsrfGuard } from './common/guards/csrf.guard';
@@ -54,6 +55,7 @@ import { TransformResponseInterceptor } from './common/interceptors/transform-re
     FoodSchedulesModule,
     ContentModule,
     ChallengesModule,
+    MessagesModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

@@ -5,3 +5,4 @@ export * from './workout';
 export * from './nutrition';
 export * from './stats';
 export * from './content';
+export * from './messages';

@@ -3,6 +3,7 @@ import { MealLogStatus, UserRole, UserStatus, WorkoutAssignmentStatus } from '@p
 import type {
   AtRiskUserDto,
   ChartPointDto,
+  AdvancedStatsDto,
   CoachDashboardDto,
   FollowUpDto,
   RiskCode,
@@ -10,13 +11,14 @@ import type {
   UserDashboardDto,
   UserStatisticsDto,
 } from '@neo/shared-types';
-import type { CreateFollowUpInput, RiskSettingsInput } from '@neo/validation';
+import type { AdvancedStatsQuery, CreateFollowUpInput, RiskSettingsInput } from '@neo/validation';
 import { AuditService } from '../audit/audit.service';
-import { addDays, dayOfWeekName, formatDateOnly, parseDateOnly, todayIn, weekStartOf, zonedTimeToUtc } from '../common/dates';
+import { addDays, dayOfWeekName, formatDateOnly, parseDateOnly, todayIn, utcToZoned, weekStartOf, zonedTimeToUtc } from '../common/dates';
 import type { AuthenticatedUser } from '../common/types/authenticated-user';
 import { PrismaService } from '../database/prisma.service';
 import { assignmentInclude, toAssignmentDto } from '../workouts/workout.mapper';
 import { computeAdherence, type AssignmentFact } from './adherence';
+import { computeAdvancedStats } from './advanced';
 import { evaluateRisk } from './risk';
 import { SettingsService } from './settings.service';
 
@@ -33,6 +35,51 @@ export class StatisticsService {
     private readonly settings: SettingsService,
     private readonly audit: AuditService,
   ) {}
+
+  // ── Coach: estadísticas avanzadas (HU-31 · C05) ───────────────────────
+
+  async advancedStatistics(coach: AuthenticatedUser, query: AdvancedStatsQuery): Promise<AdvancedStatsDto> {
+    const today = todayIn(coach.timezone);
+    const requestedTo = query.to ?? today;
+    const from = query.from ?? addDays(requestedTo, -89);
+    // Lo futuro no tiene datos: se recorta a hoy. Si el período es íntegramente futuro, queda vacío en hoy.
+    const to = requestedTo > today ? today : requestedTo;
+    const effectiveFrom = from > to ? to : from;
+    const start = zonedTimeToUtc(effectiveFrom, '00:00', coach.timezone);
+    const end = zonedTimeToUtc(addDays(to, 1), '00:00', coach.timezone);
+
+    const users = await this.prisma.user.findMany({
+      where: { role: UserRole.USER, status: UserStatus.ACTIVE },
+      select: { id: true, firstName: true, lastName: true },
+    });
+    const ids = users.map((u) => u.id);
+    const dateRange = { gte: parseDateOnly(effectiveFrom), lte: parseDateOnly(to) };
+
+    const [assignments, meals, feedback] = await Promise.all([
+      this.prisma.workoutAssignment.findMany({
+        where: { userId: { in: ids }, scheduledDate: dateRange, status: { not: WorkoutAssignmentStatus.CANCELLED } },
+        select: { userId: true, scheduledDate: true, status: true, workoutId: true, workout: { select: { title: true } } },
+      }),
+      this.prisma.mealLog.findMany({
+        where: { userId: { in: ids }, status: { not: MealLogStatus.DRAFT }, consumedAt: { gte: start, lt: end } },
+        select: { userId: true, consumedAt: true, reviewedAt: true },
+      }),
+      this.prisma.workoutFeedback.findMany({
+        where: { session: { assignment: { userId: { in: ids }, scheduledDate: dateRange } } },
+        select: { feelingRating: true, session: { select: { assignment: { select: { userId: true } } } } },
+      }),
+    ]);
+
+    return computeAdvancedStats({
+      from: effectiveFrom,
+      to,
+      today,
+      users: users.map((u) => ({ id: u.id, name: `${u.firstName} ${u.lastName}`.trim() })),
+      assignments: assignments.map((a) => ({ userId: a.userId, ...fact(a), workoutId: a.workoutId, workoutTitle: a.workout.title })),
+      mealLogs: meals.map((m) => ({ userId: m.userId, date: utcToZoned(m.consumedAt, coach.timezone).date, consumedAt: m.consumedAt, reviewedAt: m.reviewedAt })),
+      feedback: feedback.map((f) => ({ userId: f.session.assignment.userId, feelingRating: f.feelingRating })),
+    });
+  }
 
   // ── Coach: dashboard (HU-14) ──────────────────────────────────────────
 

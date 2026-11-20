@@ -189,3 +189,35 @@ describe('StatisticsService.userDashboard (HU-16)', () => {
     expect(res).toMatchObject({ weekly: { completed: 0, goal: 3 }, todayDone: false, nutrition: { planName: null, plannedMealsToday: 0, loggedToday: 0 } });
   });
 });
+
+describe('StatisticsService.advancedStatistics (HU-31)', () => {
+  const withFeedback = () =>
+    setup({
+      workoutFeedback: { findMany: jest.fn().mockResolvedValue([]) },
+      mealLog: { count: jest.fn().mockResolvedValue(0), groupBy: jest.fn().mockResolvedValue([]), findMany: jest.fn().mockResolvedValue([]) },
+    });
+
+  it('por defecto cubre 90 días hasta hoy y solo consulta usuarias activas', async () => {
+    const { service, prisma } = withFeedback();
+    prisma.user.findMany.mockResolvedValue([user('u1')]);
+    const res = await service.advancedStatistics(coach, {});
+    expect(res).toMatchObject({ to: TODAY, from: addDays(TODAY, -89), days: 90, activeUsers: 1 });
+    expect(prisma.user.findMany.mock.calls[0][0].where).toEqual({ role: 'USER', status: 'ACTIVE' });
+    expect(prisma.workoutAssignment.findMany.mock.calls[0][0].where.status).toEqual({ not: 'CANCELLED' });
+  });
+
+  it('recorta un fin futuro a hoy', async () => {
+    const { service, prisma } = withFeedback();
+    prisma.user.findMany.mockResolvedValue([]);
+    const res = await service.advancedStatistics(coach, { from: addDays(TODAY, -10), to: addDays(TODAY, 20) });
+    expect(res.to).toBe(TODAY);
+    expect(res.days).toBe(11);
+  });
+
+  it('un período íntegramente futuro queda vacío en hoy', async () => {
+    const { service, prisma } = withFeedback();
+    prisma.user.findMany.mockResolvedValue([]);
+    const res = await service.advancedStatistics(coach, { from: addDays(TODAY, 5), to: addDays(TODAY, 9) });
+    expect(res).toMatchObject({ from: TODAY, to: TODAY, days: 1 });
+  });
+});

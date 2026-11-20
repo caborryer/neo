@@ -14,6 +14,9 @@ Detalle completo (criterios Gherkin, casos borde) en el documento de Claude: <ht
 | 3 | Nutrición y diario alimenticio | 2 | 8 |
 | 4 | Dashboards, adherencia y notificaciones | 2 | 5 |
 | 5 | Pruebas, pulido y despliegue | 2 | 4 |
+| 6 | Contenido y retos (posterior al MVP) | — | — |
+| 7 | Estadísticas avanzadas (posterior al MVP) | — | — |
+| 8 | Mensajería individual (posterior al MVP) | — | — |
 
 ## Historias
 
@@ -47,11 +50,11 @@ Detalle completo (criterios Gherkin, casos borde) en el documento de Claude: <ht
 | HU-26 | Cálculo de adherencia | — | Alta | 4 | Hecha (Fase 4) |
 | HU-27 | Alertas de usuarias en riesgo | C01 | Media | 4 | Hecha (Fase 4) |
 | HU-28 | Auditoría, privacidad y consentimiento | — | Alta | 1 | Hecha (auditoría en Fase 1; consentimiento en Fase 4) |
-| HU-29 | Retos: gestión de la Coach | C08 | Baja | Posterior | Fuera del MVP |
-| HU-30 | Retos: participación de la usuaria | U07 | Baja | Posterior | Fuera del MVP |
-| HU-31 | Estadísticas avanzadas | C05 | Baja | Posterior | Fuera del MVP |
-| HU-32 | Mensajería individual | C09 | Baja | Posterior | Fuera del MVP |
-| HU-33 | Gestión de contenido | C04 | Baja | Posterior | Fuera del MVP |
+| HU-29 | Retos: gestión de la Coach | C08 | Baja | 6 | Hecha (Fase 6) |
+| HU-30 | Retos: participación de la usuaria | U07 | Baja | 6 | Hecha (Fase 6) |
+| HU-31 | Estadísticas avanzadas | C05 | Baja | 7 | Hecha (Fase 7) |
+| HU-32 | Mensajería individual | C09 | Baja | 8 | Hecha (Fase 8) |
+| HU-33 | Gestión de contenido | C04 | Baja | 6 | Hecha (Fase 6) |
 
 ## Línea de corte (si hay atraso)
 

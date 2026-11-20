@@ -424,6 +424,20 @@ export const statsRangeSchema = z.object({
 });
 export type StatsRangeQuery = z.output<typeof statsRangeSchema>;
 
+const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida (AAAA-MM-DD)').refine((v) => !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v, 'Fecha inválida');
+export const ADVANCED_STATS_MAX_DAYS = 366;
+
+/** HU-31: período libre (máx. 366 días). Sin fechas = últimos 90 días. */
+export const advancedStatsQuerySchema = z
+  .object({ from: dateOnly.optional(), to: dateOnly.optional() })
+  .refine((v) => (v.from === undefined) === (v.to === undefined), { message: 'Indica "from" y "to" juntos', path: ['from'] })
+  .refine((v) => !v.from || !v.to || v.from <= v.to, { message: 'La fecha inicial no puede ser posterior a la final', path: ['from'] })
+  .refine((v) => !v.from || !v.to || (Date.parse(`${v.to}T00:00:00Z`) - Date.parse(`${v.from}T00:00:00Z`)) / 86_400_000 < ADVANCED_STATS_MAX_DAYS, {
+    message: `El período no puede superar ${ADVANCED_STATS_MAX_DAYS} días`,
+    path: ['to'],
+  });
+export type AdvancedStatsQuery = z.output<typeof advancedStatsQuerySchema>;
+
 /** Umbrales de las alertas de riesgo (§4.8); los valores por defecto son los del spec donde existen. */
 export const riskSettingsSchema = z.object({
   inactivityDays: z.number().int().min(3, 'Mínimo 3 días').max(30, 'Máximo 30 días').default(7),
@@ -527,3 +541,25 @@ export const listChallengesQuerySchema = paginationQuerySchema.extend({
   published: z.enum(['true', 'false']).optional(),
 });
 export type ListChallengesQuery = z.output<typeof listChallengesQuerySchema>;
+
+// ─── Fase 8: mensajería individual (HU-32) ──────────────────────────────
+
+export const MESSAGE_MAX_LENGTH = 2000;
+
+/** Solo texto. Se recorta y no admite mensajes vacíos. */
+export const sendMessageSchema = z.object({
+  body: z.string().trim().min(1, 'Escribe un mensaje').max(MESSAGE_MAX_LENGTH, `Máximo ${MESSAGE_MAX_LENGTH} caracteres`),
+});
+export type SendMessageInput = z.output<typeof sendMessageSchema>;
+
+/** Paginación por cursor: `before` es el id del mensaje más antiguo que ya se tiene. */
+export const listMessagesQuerySchema = z.object({
+  before: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(30),
+});
+export type ListMessagesQuery = z.output<typeof listMessagesQuerySchema>;
+
+export const listConversationsQuerySchema = z.object({
+  search: z.string().trim().max(100).optional(),
+});
+export type ListConversationsQuery = z.output<typeof listConversationsQuerySchema>;

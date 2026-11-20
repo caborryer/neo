@@ -88,6 +88,17 @@ Fases 0 a 4 completas (base, autenticación, contenido, nutrición, dashboards y
 - Checklist de QA manual: [`docs/QA.md`](docs/QA.md).
 - Identidad visual (colores, logo, tipografía): [`docs/MARCA.md`](docs/MARCA.md).
 
+Fase 8 (mensajería individual, HU-32 · C09):
+
+- Un hilo por usuaria con su Coach, solo texto (máx. 2000 caracteres), con estado «Enviado / Leído», aviso en notificaciones (uno por hilo mientras no se lea) e icono con contador junto a la campana. Sin tiempo real: se actualiza cada 15 s con el hilo abierto.
+- Usuaria: `/app/messages`. Coach: `/coach/messages` (lista con búsqueda y no leídos) y `/coach/messages/:userId`. Endpoints: `/messages*` y `/coach/conversations*`.
+- Requiere migración: desde `apps/api`, `npm run prisma:migrate -- --name fase8` (nuevo modelo `Message` y valor `NEW_MESSAGE` en `NotificationType`).
+
+Fase 7 (estadísticas avanzadas, HU-31 · C05):
+
+- Pantalla `/coach/statistics`: período de 30 días a 1 año o personalizado (máx. 366 días), KPIs (adherencia, parciales, sesiones por usuaria/semana, sensación, comidas, tiempo de revisión), tendencia semanal, distribución de adherencia, entrenamientos más completados y comparación por usuaria ordenable.
+- Exportación CSV desde el navegador (con BOM y protección contra inyección de fórmulas). Endpoint: `GET /api/v1/coach/statistics?from&to` (solo Coach). No requiere migración.
+
 Fase 6 (contenido y retos):
 
 - **Contenido (HU-33)**: la Coach crea artículos y videos de YouTube (reproductor sin cookies), con borrador/publicado; las usuarias solo ven lo publicado.

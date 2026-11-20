@@ -31,6 +31,8 @@ export function targetOf(n: NotificationDto, isCoach: boolean): string | null {
     case 'CHALLENGE_PUBLISHED':
     case 'CHALLENGE_COMPLETED':
       return !isCoach && typeof d.challengeId === 'string' ? userRoutes.challenge(d.challengeId) : userRoutes.challenges;
+    case 'NEW_MESSAGE':
+      return isCoach ? (typeof d.threadUserId === 'string' ? coachRoutes.messageThread(d.threadUserId) : coachRoutes.messages) : userRoutes.messages;
     case 'FEEDBACK_RECEIVED':
       return isCoach ? coachRoutes.dashboard : null;
     default:

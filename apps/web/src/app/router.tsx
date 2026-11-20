@@ -37,6 +37,9 @@ import { DiaryPage } from '@/features/food-diary/DiaryPage';
 import { FoodReviewsPage } from '@/features/food-diary/FoodReviewsPage';
 import { UserDashboardPage } from '@/features/statistics/UserDashboardPage';
 import { CoachDashboardPage } from '@/features/statistics/CoachDashboardPage';
+import { AdvancedStatsPage } from '@/features/statistics/AdvancedStatsPage';
+import { CoachMessagesPage } from '@/features/messages/CoachMessagesPage';
+import { UserMessagesPage } from '@/features/messages/UserMessagesPage';
 import { SettingsPage } from '@/features/statistics/SettingsPage';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
@@ -57,6 +60,7 @@ const userChildren: RouteObject[] = [
   { path: rel(userRoutes.nutritionDiary, '/app'), element: <DiaryPage /> },
   { path: rel(userRoutes.nutritionSchedules, '/app'), element: <SchedulesPage /> },
   { path: rel(userRoutes.nutritionReminders, '/app'), element: <Navigate to={userRoutes.nutritionSchedules} replace /> },
+  { path: rel(userRoutes.messages, '/app'), element: <UserMessagesPage /> },
   { path: rel(userRoutes.challenges, '/app'), element: <UserChallengesPage /> },
   { path: rel(userRoutes.challenge(), '/app'), element: <UserChallengeDetailPage /> },
   { path: rel(userRoutes.content, '/app'), element: <UserContentPage /> },
@@ -89,8 +93,9 @@ const coachChildren: RouteObject[] = [
   { path: rel(coachRoutes.challengesCreate, '/coach'), element: <ChallengeFormPage /> },
   { path: rel(coachRoutes.challenge(), '/coach'), element: <CoachChallengeDetailPage /> },
   { path: rel(coachRoutes.challengeEdit(), '/coach'), element: <ChallengeFormPage /> },
-  { path: rel(coachRoutes.statistics, '/coach'), element: page('Estadísticas', 'C05 · HU-31 (posterior al MVP)') },
-  { path: rel(coachRoutes.messages, '/coach'), element: page('Mensajes', 'C09 · HU-32 (posterior al MVP)') },
+  { path: rel(coachRoutes.statistics, '/coach'), element: <AdvancedStatsPage /> },
+  { path: rel(coachRoutes.messages, '/coach'), element: <CoachMessagesPage /> },
+  { path: rel(coachRoutes.messageThread(), '/coach'), element: <CoachMessagesPage /> },
   { path: rel(coachRoutes.settings, '/coach'), element: <SettingsPage /> },
   { path: rel(coachRoutes.notifications, '/coach'), element: <NotificationsPage /> },
 ];

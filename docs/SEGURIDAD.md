@@ -39,3 +39,10 @@ Revisión del código de la API y la web (noviembre 2026). Alcance: inyección, 
 2. Probar la restauración de un backup.
 3. SMTP real con SPF/DKIM; acceso al servidor solo por llave SSH.
 4. Prueba de intrusión externa o al menos un escaneo (OWASP ZAP) contra un entorno de pruebas.
+
+## Mensajería (HU-32)
+
+- **Control de acceso:** la usuaria nunca envía un identificador de hilo; el servidor usa su sesión, así que no existe IDOR posible. La Coach solo abre hilos de usuarias activas (otro id → 404).
+- **XSS:** el cuerpo se guarda como texto plano y React lo escapa; hay test que lo comprueba.
+- **Abuso:** límite de 20 envíos por minuto por cliente, 2000 caracteres por mensaje, un solo aviso por hilo mientras no se lea.
+- **Privacidad:** el contenido de los mensajes no se escribe en el log de auditoría ni en los logs de la aplicación.

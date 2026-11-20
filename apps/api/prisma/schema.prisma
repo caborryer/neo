@@ -129,6 +129,7 @@ enum NotificationType {
   MEAL_LOG_PENDING_REVIEW
   MEAL_LOG_REVIEWED
   CHALLENGE_COMPLETED
+  NEW_MESSAGE
 }
 
 enum PasswordTokenPurpose {
@@ -178,6 +179,8 @@ model User {
   createdContent       Content[]
   mediaAssets          MediaAsset[]
   notifications        Notification[]
+  conversationMessages Message[]                @relation("MessageThread")
+  sentMessages         Message[]                @relation("MessageSender")
   auditLogs            AuditLog[]
   riskFollowUpsAbout   RiskFollowUp[]           @relation("FollowUpUser")
   riskFollowUpsMade    RiskFollowUp[]           @relation("FollowUpBy")
@@ -544,6 +547,22 @@ model Notification {
   createdAt DateTime         @default(now())
 
   @@index([userId, readAt])
+}
+
+/// HU-32: mensajería individual. Un hilo por usuaria (la otra parte es su Coach); `threadUserId` identifica el hilo.
+/// Solo texto. `readAt` lo marca quien RECIBE el mensaje (la contraparte de `senderId`).
+model Message {
+  id           String    @id @default(uuid())
+  threadUserId String
+  thread       User      @relation("MessageThread", fields: [threadUserId], references: [id])
+  senderId     String
+  sender       User      @relation("MessageSender", fields: [senderId], references: [id])
+  body         String
+  readAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([threadUserId, createdAt])
+  @@index([threadUserId, readAt])
 }
 
 model AuditLog {

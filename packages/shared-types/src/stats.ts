@@ -111,3 +111,61 @@ export interface FoodScheduleDto {
   /** true = aún no la configuró: es la hora sugerida por defecto. */
   isDefault: boolean;
 }
+
+// ─── Fase 7: estadísticas avanzadas (HU-31 · C05) ───────────────────────
+
+export interface WeeklyStatsPointDto {
+  /** Lunes de la semana (YYYY-MM-DD). */
+  weekStart: string;
+  scheduled: number;
+  completed: number;
+  adherence: number | null;
+  mealLogs: number;
+}
+
+export interface AdherenceBucketDto {
+  label: string;
+  users: number;
+}
+
+export interface UserStatsRowDto {
+  userId: string;
+  userName: string;
+  scheduled: number;
+  completed: number;
+  partial: number;
+  adherence: number | null;
+  /** Sesiones completadas por semana (promedio en el período). */
+  sessionsPerWeek: number;
+  mealLogs: number;
+  /** Sensación promedio (1–5) declarada en el feedback; null si no hay feedback. */
+  avgFeeling: number | null;
+  lastWorkoutDate: string | null;
+}
+
+export interface TopWorkoutDto {
+  workoutId: string;
+  title: string;
+  scheduled: number;
+  completed: number;
+  adherence: number | null;
+}
+
+export interface AdvancedStatsDto {
+  from: string;
+  to: string;
+  days: number;
+  activeUsers: number;
+  workouts: AdherenceDto;
+  avgSessionsPerUserWeek: number | null;
+  mealLogs: number;
+  mealLogsPerWeek: number | null;
+  avgFeeling: number | null;
+  feedbackCount: number;
+  /** Horas promedio entre el registro de una comida y su revisión; null si no hay revisadas. */
+  avgReviewHours: number | null;
+  weekly: WeeklyStatsPointDto[];
+  distribution: AdherenceBucketDto[];
+  users: UserStatsRowDto[];
+  topWorkouts: TopWorkoutDto[];
+}

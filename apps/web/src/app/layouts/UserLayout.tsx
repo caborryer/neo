@@ -5,6 +5,7 @@ import { BottomNavigation, userNavItems } from '@/components/layout/BottomNaviga
 import { userRoutes } from '@/app/routes';
 import { cn } from '@/utils/cn';
 import { LogoutButton } from '@/features/auth/LogoutButton';
+import { MessagesLink } from '@/features/messages/MessagesLink';
 import { NotificationBell } from '@/features/notifications/NotificationBell';
 import { ConsentBanner } from '@/features/profile/ConsentBanner';
 
@@ -31,6 +32,7 @@ export function UserLayout() {
               ))}
           </nav>
           <div className="flex items-center gap-1">
+            <MessagesLink to={userRoutes.messages} />
             <NotificationBell to={userRoutes.notifications} />
             <LogoutButton showLabel={false} className="px-2" />
           </div>

@@ -1,9 +1,11 @@
 import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import {
+  advancedStatsQuerySchema,
   createFollowUpSchema,
   riskSettingsSchema,
   statsRangeSchema,
+  type AdvancedStatsQuery,
   type CreateFollowUpInput,
   type RiskSettingsInput,
   type StatsRangeQuery,
@@ -31,6 +33,12 @@ export class StatisticsController {
   @Get('coach/dashboard')
   coachDashboard(@CurrentUser() coach: AuthenticatedUser, @Query(new ZodValidationPipe(statsRangeSchema)) q: StatsRangeQuery) {
     return this.stats.coachDashboard(coach, q.range);
+  }
+
+  @Roles(UserRole.COACH)
+  @Get('coach/statistics')
+  advancedStatistics(@CurrentUser() coach: AuthenticatedUser, @Query(new ZodValidationPipe(advancedStatsQuerySchema)) q: AdvancedStatsQuery) {
+    return this.stats.advancedStatistics(coach, q);
   }
 
   @Roles(UserRole.COACH)

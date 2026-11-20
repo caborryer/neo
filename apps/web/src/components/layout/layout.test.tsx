@@ -27,6 +27,7 @@ describe('navegación', () => {
     expect(screen.getByRole('link', { name: /Planes nutricionales/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Contenido/ })).toHaveAttribute('href', '/coach/content');
     expect(screen.getByRole('link', { name: /Retos/ })).toHaveAttribute('href', '/coach/challenges');
-    expect(screen.queryByRole('link', { name: /Estadísticas/ })).toBeNull();
+    expect(screen.getByRole('link', { name: /Estadísticas/ })).toHaveAttribute('href', '/coach/statistics');
+    expect(screen.getByRole('link', { name: /Mensajes/ })).toHaveAttribute('href', '/coach/messages');
   });
 });

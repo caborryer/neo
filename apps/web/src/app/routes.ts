@@ -19,6 +19,7 @@ export const userRoutes = {
   content: '/app/content',
   contentItem: (id = ':id') => `/app/content/${id}`,
   profile: '/app/profile',
+  messages: '/app/messages',
   notifications: '/app/notifications',
 } as const;
 
@@ -47,6 +48,7 @@ export const coachRoutes = {
   challengeEdit: (id = ':id') => `/coach/challenges/${id}/edit`,
   statistics: '/coach/statistics',
   messages: '/coach/messages',
+  messageThread: (userId = ':userId') => `/coach/messages/${userId}`,
   settings: '/coach/settings',
   notifications: '/coach/notifications',
 } as const;

@@ -48,3 +48,23 @@ Ejecuta esta lista en el servidor de pruebas antes de cada entrega. Ningún fluj
 - [ ] `/api/v1/health` responde con `database: up`.
 - [ ] Backup manual y restauración probada en servidor de pruebas.
 - [ ] Certificado HTTPS emitido y redirección http→https.
+
+## Estadísticas avanzadas (HU-31 · C05)
+
+- [ ] Coach: «Estadísticas» aparece activo en el menú y abre `/coach/statistics`; una usuaria recibe 403/redirección.
+- [ ] Cambiar el período (30/90/180/365) actualiza KPIs y gráficos; «Personalizado» con más de 366 días muestra el aviso y no consulta.
+- [ ] Los números coinciden con el dashboard (C01) para el mismo rango (adherencia, completados).
+- [ ] La tabla por usuaria se ordena al pulsar cada columna; las usuarias sin datos quedan al final y se muestran con «—», no con 0 %.
+- [ ] Exportar CSV: abre bien en Excel con tildes; un nombre que empiece por `=` aparece como texto (con `'` delante), no como fórmula.
+- [ ] Sin usuarias activas: estado vacío y botón de exportar deshabilitado.
+
+## Mensajería individual (HU-32 · C09)
+
+- [ ] Usuaria: el icono de mensajes junto a la campana abre `/app/messages`; escribe, envía con Enter (Shift+Enter hace salto de línea) y el botón está deshabilitado con el cuadro vacío.
+- [ ] Coach: «Mensajes» abre la lista con búsqueda; las usuarias con mensajes nuevos aparecen primero con su contador.
+- [ ] Al escribir una parte, la otra ve el contador del icono y una notificación «Nuevo mensaje» (solo una mientras no la lea); al abrir el hilo se marca como leído y el emisor ve «Leído».
+- [ ] Un mensaje con HTML (`<b>hola</b>`, `<img onerror=…>`) se ve como texto, sin ejecutarse.
+- [ ] Más de 30 mensajes: «Ver mensajes anteriores» carga los previos sin perder la posición.
+- [ ] Usuaria sin Coach asignada: al enviar recibe el aviso de que aún no tiene Coach.
+- [ ] Usuaria suspendida o inactiva: no aparece en la lista de la Coach y no puede abrir `/app/messages` (acceso bloqueado).
+- [ ] Una usuaria no puede leer el hilo de otra (el API solo usa su propia sesión); un id ajeno en `/coach/conversations/:id` desde una usuaria → 403.

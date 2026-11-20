@@ -13,7 +13,7 @@ interface Item {
   disabled?: boolean;
 }
 
-/** Navegación del panel Coach (§2.2). Estadísticas y Mensajes son posteriores al MVP. */
+/** Navegación del panel Coach (§2.2). Estadísticas (Fase 7) y Mensajes (Fase 8). */
 export const coachNavItems: Item[] = [
   { to: coachRoutes.dashboard, label: 'Dashboard', icon: House },
   { to: coachRoutes.users, label: 'Usuarias', icon: UserRound },
@@ -23,8 +23,8 @@ export const coachNavItems: Item[] = [
   { to: coachRoutes.foodReviews, label: 'Revisión alimenticia', icon: Camera },
   { to: coachRoutes.content, label: 'Contenido', icon: BookOpen },
   { to: coachRoutes.challenges, label: 'Retos', icon: Trophy },
-  { to: coachRoutes.statistics, label: 'Estadísticas', icon: ChartColumn, disabled: true },
-  { to: coachRoutes.messages, label: 'Mensajes', icon: MessageCircle, disabled: true },
+  { to: coachRoutes.statistics, label: 'Estadísticas', icon: ChartColumn },
+  { to: coachRoutes.messages, label: 'Mensajes', icon: MessageCircle },
   { to: coachRoutes.settings, label: 'Configuración', icon: Settings },
 ];
 
